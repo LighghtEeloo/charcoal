@@ -1,5 +1,7 @@
-use std::collections::HashSet;
+use serde::{Deserialize, Serialize};
+use std::{collections::HashSet, io, path::Path, fs};
 
+#[derive(Serialize, Deserialize)]
 pub struct Config {
     pub toggles: HashSet<Toggle>,
 }
@@ -15,6 +17,27 @@ impl Config {
             toggles: Toggle::all().collect(),
         }
     }
+    pub fn of_path(path: impl AsRef<Path>) -> io::Result<Self> {
+        let content = fs::read_to_string(path)?;
+        Ok(toml::from_str(&content)?)
+    }
+    pub fn to_file(&self, path: impl AsRef<Path>) -> anyhow::Result<()> {
+        let s = toml::to_string_pretty(&self)?;
+        fs::write(path, s)?;
+        Ok(())
+    }
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        use Toggle::*;
+        let mut config = Config::all();
+        config.turn_off(WithSpeech);
+        config
+    }
+}
+
+impl Config {
     pub fn check(&self, toggle: Toggle) -> bool {
         self.toggles.contains(&toggle)
     }
@@ -33,7 +56,7 @@ impl Config {
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum Toggle {
     WithPronunciation,
     WithVariants,

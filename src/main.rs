@@ -8,9 +8,12 @@ async fn main() -> anyhow::Result<()> {
     env_logger::init();
 
     let args = cli::Args::parse();
-    let mut config = Config::all();
-    if !args.speak {
-        config.turn_off(charcoal::Toggle::WithSpeech)
+    let config_path = "./charcoal.toml";
+
+    let mut config = Config::of_path(config_path).unwrap_or_default();
+    config.to_file(config_path)?;
+    if args.speak {
+        config.flip(charcoal::Toggle::WithSpeech)
     }
 
     // let word = "loom";
