@@ -16,3 +16,4 @@ tokio = { version = "1", features = ["full"] }
 scraper = "0.13"
 # tts = "0.22"
 google_speech = "0.1"
+colored = "2.0"
