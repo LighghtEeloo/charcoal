@@ -1,19 +1,21 @@
 #![allow(dead_code)]
 
-use charcoal::{speak, Word};
+use charcoal::{speak, Config, Word};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     env_logger::init();
 
+    let config = Config::all();
+
     // let word = "loom";
     // let word = "depreciate";
     let word = "jargon";
 
-    let speech = speak(word);
+    let speech = speak(word, &config);
     let word = Word::query(word).await?;
     // println!("{:#?}", word);
-    println!("{}", word);
+    word.display(&config);
 
     if let Err(err) = speech.await {
         eprintln!("An error occured in google speech module: {}.", err)
