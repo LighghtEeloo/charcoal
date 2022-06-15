@@ -1,12 +1,17 @@
 #![allow(dead_code)]
 
-use charcoal::{speak, Config, Word};
+use charcoal::{cli, speak, Config, Word};
+use clap::Parser;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     env_logger::init();
 
-    let config = Config::all();
+    let args = cli::Args::parse();
+    let mut config = Config::all();
+    if !args.speak {
+        config.turn_off(charcoal::Toggle::WithSpeech)
+    }
 
     // let word = "loom";
     // let word = "depreciate";
