@@ -16,12 +16,10 @@ async fn main() -> anyhow::Result<()> {
         config.flip(charcoal::Toggle::WithSpeech)
     }
 
-    // let word = "loom";
-    // let word = "depreciate";
-    let word = "jargon";
+    let query_word = args.query_word;
 
-    let speech = speak(word, &config);
-    let word = Word::query(word).await?;
+    let speech = speak(query_word.clone(), &config);
+    let word = Word::query(query_word).await?;
     // println!("{:#?}", word);
     word.display(&config);
 
