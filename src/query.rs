@@ -1,3 +1,4 @@
+mod authority;
 mod sentence;
 
 use scraper::{ElementRef, Html, Selector};
@@ -10,8 +11,7 @@ pub trait Select {
 }
 
 #[derive(Clone, Debug)]
-pub struct Word {
-    pub word: String,
+pub struct WordQuery {
     pub pronunciation: Vec<(String, String)>,
     pub brief: Vec<String>,
     pub variants: Vec<String>,
@@ -19,7 +19,7 @@ pub struct Word {
     pub sentence: Vec<(String, String)>,
 }
 
-impl Word {
+impl WordQuery {
     pub fn is_empty(&self) -> bool {
         return self.pronunciation.is_empty()
             && self.brief.is_empty()
@@ -43,54 +43,52 @@ fn trim_str(t: &str) -> Option<String> {
     }
 }
 
-impl Select for Word {
+impl Select for WordQuery {
     type Target = Self;
 
     fn select(elem: ElementRef) -> anyhow::Result<Self::Target> {
         let doc = elem;
         let pronunciation = {
-            let mut vec = Vec::new();
             let sel = Selector::parse("span.pronounce").unwrap();
-            for child in doc.select(&sel) {
-                let pron = child.text().filter_map(trim_str).collect::<Vec<String>>();
-                vec.push((pron[0].to_owned(), pron[1].to_owned()))
-            }
-            vec
+            doc.select(&sel)
+                .map(|child| {
+                    let pron = child.text().filter_map(trim_str).collect::<Vec<String>>();
+                    (pron[0].to_owned(), pron[1].to_owned())
+                })
+                .collect()
         };
 
         let brief = {
-            let mut vec = Vec::new();
             let sel = Selector::parse("#phrsListTab .trans-container ul li").unwrap();
-            for child in doc.select(&sel) {
-                vec.push(
+            doc.select(&sel)
+                .map(|child| {
                     child
                         .text()
                         .filter_map(trim_str)
                         .collect::<Vec<String>>()
-                        .join(""),
-                );
-            }
-            vec
+                        .join("")
+                })
+                .collect()
         };
 
         let variants = {
-            let mut vec = Vec::new();
             let sel = Selector::parse("#phrsListTab .trans-container p").unwrap();
-            for child in doc.select(&sel) {
-                vec.extend(child.text().map(|t| {
-                    t.split("\n")
-                        .filter_map(trim_str)
-                        .collect::<Vec<String>>()
-                        .join(" ")
-                }));
-            }
-            vec
+            doc.select(&sel)
+                .map(|child| {
+                    child.text().map(|t| {
+                        t.split("\n")
+                            .filter_map(trim_str)
+                            .collect::<Vec<String>>()
+                            .join(" ")
+                    })
+                })
+                .flatten()
+                .collect()
         };
 
         let sentence = Sentence::select(elem)?;
 
-        Ok(Word {
-            word: String::new(),
+        Ok(WordQuery {
             pronunciation,
             brief,
             variants,
@@ -100,17 +98,16 @@ impl Select for Word {
     }
 }
 
-impl Word {
-    pub async fn query(query_word: impl ToString) -> anyhow::Result<Word> {
-        let word = query_word.to_string();
-        let youdao_dict_url =
-            url::Url::parse(&format!("http://dict.youdao.com/search?q={}", word))?;
+impl WordQuery {
+    pub async fn query(query_word: impl AsRef<str>) -> anyhow::Result<WordQuery> {
+        let youdao_dict_url = url::Url::parse(&format!(
+            "http://dict.youdao.com/search?q={}",
+            query_word.as_ref()
+        ))?;
 
         let xml = get_html(youdao_dict_url).await?;
         let doc = Html::parse_document(&xml);
 
-        let mut res = Self::select(doc.root_element())?;
-        res.word = word;
-        Ok(res)
+        Self::select(doc.root_element())
     }
 }

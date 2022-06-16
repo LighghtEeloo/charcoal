@@ -1,11 +1,11 @@
 use colored::Colorize;
 
-use super::{Config, Toggle, Word};
+use super::{Config, Toggle, WordQuery};
 
-impl Word {
-    pub fn display(&self, config: &Config) {
+impl WordQuery {
+    pub fn display(&self, word: impl AsRef<str>, config: &Config) {
         use Toggle::*;
-        print!("{}\n", self.word.bright_red());
+        print!("{}\n", word.as_ref().bright_red());
 
         if config.check(WithPronunciation) {
             for (accent, pron) in self.pronunciation.iter() {

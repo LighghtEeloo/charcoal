@@ -23,20 +23,16 @@ impl Select for Sen {
     fn select(elem: ElementRef) -> anyhow::Result<Self::Target> {
         let sel = Selector::parse("p").unwrap();
         let mut iter = elem.select(&sel);
-        let ori = iter
-            .next()
-            .expect("No ori found in sentence")
-            .text()
-            .filter_map(trim_str)
-            .collect::<Vec<String>>()
-            .join(" ");
-        let trans = iter
-            .next()
-            .expect("No trans found in sentence")
-            .text()
-            .filter_map(trim_str)
-            .collect::<Vec<String>>()
-            .join("");
+
+        fn text_and_join(elem: ElementRef, sep: &str) -> String {
+            elem.text()
+                .filter_map(trim_str)
+                .collect::<Vec<String>>()
+                .join(sep)
+        }
+
+        let ori = text_and_join(iter.next().expect("No ori found in sentence"), " ");
+        let trans = text_and_join(iter.next().expect("No trans found in sentence"), "");
         Ok((ori, trans))
     }
 }

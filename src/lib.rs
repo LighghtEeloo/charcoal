@@ -9,5 +9,5 @@ pub mod query;
 pub mod speech;
 
 pub use config::{Config, ConfigBuilder, Toggle};
-pub use query::Word;
+pub use query::WordQuery;
 pub use speech::speak;
