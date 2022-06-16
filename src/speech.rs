@@ -13,10 +13,19 @@ async fn __speak(word: impl AsRef<str>) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub async fn speak(word: impl AsRef<str>, config: &Config) -> anyhow::Result<()> {
-    if config.check(Toggle::WithSpeech) {
-        __speak(word).await
-    } else {
-        Ok(())
+pub struct Speech<'a> {
+    config: &'a Config
+}
+
+impl<'a> Speech<'a> {
+    pub fn new(config: &'a Config) -> Self {
+        Self { config }
+    }
+    pub async fn speak(&self, word: impl AsRef<str>) -> anyhow::Result<()> {
+        if self.config.check(Toggle::WithSpeech) {
+            __speak(word).await
+        } else {
+            Ok(())
+        }
     }
 }

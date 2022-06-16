@@ -1,28 +1,28 @@
 #![allow(dead_code)]
 
-use charcoal::{cli, speak, ConfigBuilder, WordQuery};
-use clap::Parser;
+use charcoal::{Args, ConfigBuilder, Speech, WordQuery};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     env_logger::init();
 
     let mut config = ConfigBuilder::new().build()?;
-    let args = cli::Args::parse();
+    let args = Args::new();
 
     if args.speak {
         config.flip(charcoal::Toggle::WithSpeech)
     }
-    let word = args.query_word;
+    let word = args.query;
+    let speech = Speech::new(&config);
 
-    let speech = speak(&word, &config);
+    let word_speech = speech.speak(&word);
     let word_query = WordQuery::query(&word).await?;
 
     if word_query.is_empty() {
         println!("Word not found.")
     } else {
         word_query.display(&word, &config);
-        if let Err(err) = speech.await {
+        if let Err(err) = word_speech.await {
             eprintln!("An error occured in google speech module: {}.", err)
         }
     }

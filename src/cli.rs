@@ -6,8 +6,14 @@ use clap::Parser;
 pub struct Args {
     /// The word to be queried
     #[clap(value_parser)]
-    pub query_word: String,
+    pub query: String,
     /// Whether to speak aloud
     #[clap(short, long, value_parser, default_value_t = false)]
     pub speak: bool,
+}
+
+impl Args {
+    pub fn new() -> Self {
+        Self::parse()
+    }
 }

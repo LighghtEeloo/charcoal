@@ -8,6 +8,7 @@ pub mod display;
 pub mod query;
 pub mod speech;
 
+pub use cli::Args;
 pub use config::{Config, ConfigBuilder, Toggle};
 pub use query::WordQuery;
-pub use speech::speak;
+pub use speech::Speech;

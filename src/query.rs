@@ -1,9 +1,10 @@
 mod authority;
 mod sentence;
-
-use scraper::{ElementRef, Html, Selector};
+mod utils;
 
 use self::sentence::Sentence;
+use scraper::{ElementRef, Html, Selector};
+use utils::*;
 
 pub trait Select {
     type Target;
@@ -29,20 +30,6 @@ impl WordQuery {
     }
 }
 
-async fn get_html(url: impl AsRef<str> + reqwest::IntoUrl) -> anyhow::Result<String> {
-    let body = reqwest::get(url).await?.text().await?;
-    Ok(body)
-}
-
-fn trim_str(t: &str) -> Option<String> {
-    let t = t.trim();
-    if t.is_empty() {
-        None
-    } else {
-        Some(t.to_owned())
-    }
-}
-
 impl Select for WordQuery {
     type Target = Self;
 
@@ -51,9 +38,12 @@ impl Select for WordQuery {
         let pronunciation = {
             let sel = Selector::parse("span.pronounce").unwrap();
             doc.select(&sel)
-                .map(|child| {
-                    let pron = child.text().filter_map(trim_str).collect::<Vec<String>>();
-                    (pron[0].to_owned(), pron[1].to_owned())
+                .filter_map(|child| {
+                    let mut iter = child.text().filter_map(trim_str);
+                    match (iter.next(), iter.next()) {
+                        (Some(region), Some(pron)) => Some((region, pron)),
+                        _ => None,
+                    }
                 })
                 .collect()
         };
