@@ -23,5 +23,13 @@ impl Word {
                 print!("{}\n", line.bright_black())
             }
         }
+
+        if config.check(WithSentence) {
+            for (i, (ori, trans)) in self.sentence.iter().enumerate() {
+                let idx_str = format!("{}. ", i+1);
+                let idx_blank = " ".repeat(idx_str.len());
+                print!("{}{}\n{}{}\n", idx_str, ori.bright_green(), idx_blank, trans.yellow())
+            }
+        }
     }
 }

@@ -1,4 +1,13 @@
-use scraper::{Html, Selector};
+mod sentence;
+
+use scraper::{ElementRef, Html, Selector};
+
+use self::sentence::Sentence;
+
+pub trait Select {
+    type Target;
+    fn select(elem: ElementRef) -> anyhow::Result<Self::Target>;
+}
 
 #[derive(Clone, Debug)]
 pub struct Word {
@@ -7,7 +16,7 @@ pub struct Word {
     pub brief: Vec<String>,
     pub variants: Vec<String>,
     pub authority: Vec<String>,
-    pub sentence: Vec<String>,
+    pub sentence: Vec<(String, String)>,
 }
 
 impl Word {
@@ -34,15 +43,11 @@ fn trim_str(t: &str) -> Option<String> {
     }
 }
 
-impl Word {
-    pub async fn query(query_word: impl ToString) -> anyhow::Result<Word> {
-        let word = query_word.to_string();
-        let youdao_dict_url =
-            url::Url::parse(&format!("http://dict.youdao.com/search?q={}", word))?;
+impl Select for Word {
+    type Target = Self;
 
-        let xml = get_html(youdao_dict_url).await?;
-        let doc = Html::parse_document(&xml);
-
+    fn select(elem: ElementRef) -> anyhow::Result<Self::Target> {
+        let doc = elem;
         let pronunciation = {
             let mut vec = Vec::new();
             let sel = Selector::parse("span.pronounce").unwrap();
@@ -52,6 +57,7 @@ impl Word {
             }
             vec
         };
+
         let brief = {
             let mut vec = Vec::new();
             let sel = Selector::parse("#phrsListTab .trans-container ul li").unwrap();
@@ -66,6 +72,7 @@ impl Word {
             }
             vec
         };
+
         let variants = {
             let mut vec = Vec::new();
             let sel = Selector::parse("#phrsListTab .trans-container p").unwrap();
@@ -80,13 +87,30 @@ impl Word {
             vec
         };
 
+        let sentence = Sentence::select(elem)?;
+
         Ok(Word {
-            word,
+            word: String::new(),
             pronunciation,
             brief,
             variants,
             authority: Vec::new(),
-            sentence: Vec::new(),
+            sentence,
         })
+    }
+}
+
+impl Word {
+    pub async fn query(query_word: impl ToString) -> anyhow::Result<Word> {
+        let word = query_word.to_string();
+        let youdao_dict_url =
+            url::Url::parse(&format!("http://dict.youdao.com/search?q={}", word))?;
+
+        let xml = get_html(youdao_dict_url).await?;
+        let doc = Html::parse_document(&xml);
+
+        let mut res = Self::select(doc.root_element())?;
+        res.word = word;
+        Ok(res)
     }
 }

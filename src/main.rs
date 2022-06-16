@@ -33,6 +33,5 @@ async fn main() -> anyhow::Result<()> {
 /* TODO
  * 1. Config
  * 2. Cache
- * 3. Sentence
  * 4. Authority
  */
