@@ -4,7 +4,7 @@ An alternative to wudao-dict. With colorized output and optional speech.
 
 ## Dependency
 
-``` sh
+```sh
 # google_speech python library for online speech material
 pip3 install google_speech
 
@@ -12,3 +12,17 @@ pip3 install google_speech
 # e.g. Arch
 sudo pacman -S sox libmad libid3tag twolame
 ```
+
+## Usage
+
+```sh
+charcoal <word_to_query>
+```
+
+To see more options, 
+
+```sh
+charcoal --help
+```
+
+Tip: aliasing `charcoal` to `chr` or anything shorter is recommended.
