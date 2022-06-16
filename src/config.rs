@@ -79,15 +79,35 @@ impl Config {
     }
 }
 
-pub struct ConfigBuilder {}
+pub struct ConfigBuilder {
+    qualifier: &'static str,
+    organization: &'static str,
+    application: &'static str,
+    config_file: &'static str,
+}
 
 impl ConfigBuilder {
-    pub fn build() -> anyhow::Result<Config> {
-        let project_dirs = directories_next::ProjectDirs::from("", "LitiaEeloo", "Charcoal")
-            .expect("No valid config directory fomulated");
+    pub fn new() -> Self {
+        Self {
+            qualifier: "",
+            organization: "LitiaEeloo",
+            application: "Charcoal",
+            config_file: "charcoal.toml",
+        }
+    }
+}
+
+impl ConfigBuilder {
+    pub fn build(self) -> anyhow::Result<Config> {
+        let project_dirs = directories_next::ProjectDirs::from(
+            self.qualifier,
+            self.organization,
+            self.application,
+        )
+        .expect("No valid config directory fomulated");
         let mut config_path = project_dirs.config_dir().to_path_buf();
         fs::create_dir_all(&config_path)?;
-        config_path.push("charcoal.toml");
+        config_path.push(self.config_file);
 
         Config::of_path(&config_path).map_or_else(
             |_err| -> anyhow::Result<Config> {

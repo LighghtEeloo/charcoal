@@ -7,7 +7,7 @@ use clap::Parser;
 async fn main() -> anyhow::Result<()> {
     env_logger::init();
 
-    let mut config = ConfigBuilder::build()?;
+    let mut config = ConfigBuilder::new().build()?;
     let args = cli::Args::parse();
 
     if args.speak {
