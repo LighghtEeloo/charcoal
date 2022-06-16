@@ -10,6 +10,15 @@ pub struct Word {
     pub sentence: Vec<String>,
 }
 
+impl Word {
+    pub fn is_empty(&self) -> bool {
+        return self.pronunciation.is_empty()
+            && self.brief.is_empty()
+            && self.variants.is_empty()
+            && self.authority.is_empty()
+            && self.sentence.is_empty();
+    }
+}
 
 async fn get_html(url: impl AsRef<str> + reqwest::IntoUrl) -> anyhow::Result<String> {
     let body = reqwest::get(url).await?.text().await?;
@@ -28,11 +37,12 @@ fn trim_str(t: &str) -> Option<String> {
 impl Word {
     pub async fn query(query_word: impl ToString) -> anyhow::Result<Word> {
         let word = query_word.to_string();
-        let youdao_dict_url = url::Url::parse(&format!("http://dict.youdao.com/search?q={}", word))?;
-    
+        let youdao_dict_url =
+            url::Url::parse(&format!("http://dict.youdao.com/search?q={}", word))?;
+
         let xml = get_html(youdao_dict_url).await?;
         let doc = Html::parse_document(&xml);
-    
+
         let pronunciation = {
             let mut vec = Vec::new();
             let sel = Selector::parse("span.pronounce").unwrap();
@@ -69,7 +79,7 @@ impl Word {
             }
             vec
         };
-    
+
         Ok(Word {
             word,
             pronunciation,

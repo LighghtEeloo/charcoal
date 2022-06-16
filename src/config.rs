@@ -1,5 +1,28 @@
 use serde::{Deserialize, Serialize};
-use std::{collections::HashSet, io, path::Path, fs};
+use std::{collections::HashSet, fs, io, path::Path};
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Clone, Copy)]
+pub enum Toggle {
+    WithPronunciation,
+    WithVariants,
+    WithAuthority,
+    WithSentence,
+    WithSpeech,
+}
+
+impl Toggle {
+    pub fn all() -> impl Iterator<Item = Toggle> {
+        use Toggle::*;
+        vec![
+            WithPronunciation,
+            WithVariants,
+            WithAuthority,
+            WithSentence,
+            WithSpeech,
+        ]
+        .into_iter()
+    }
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {
@@ -56,25 +79,27 @@ impl Config {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Clone, Copy)]
-pub enum Toggle {
-    WithPronunciation,
-    WithVariants,
-    WithAuthority,
-    WithSentence,
-    WithSpeech,
-}
+pub struct ConfigBuilder {}
 
-impl Toggle {
-    pub fn all() -> impl Iterator<Item = Toggle> {
-        use Toggle::*;
-        vec![
-            WithPronunciation,
-            WithVariants,
-            WithAuthority,
-            WithSentence,
-            WithSpeech,
-        ]
-        .into_iter()
+impl ConfigBuilder {
+    pub fn build() -> anyhow::Result<Config> {
+        let project_dirs = directories_next::ProjectDirs::from("", "LitiaEeloo", "Charcoal")
+            .expect("No valid config directory fomulated");
+        let mut config_path = project_dirs.config_dir().to_path_buf();
+        fs::create_dir_all(&config_path)?;
+        config_path.push("charcoal.toml");
+
+        Config::of_path(&config_path).map_or_else(
+            |_err| -> anyhow::Result<Config> {
+                println!(
+                    "Creating new configuration file at: \n\t{}",
+                    config_path.display()
+                );
+                let config = Config::default();
+                config.to_file(&config_path)?;
+                Ok(config)
+            },
+            |config| Ok(config),
+        )
     }
 }
