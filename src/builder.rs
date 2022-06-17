@@ -31,7 +31,7 @@ impl AppDataBuilder {
             config_path
         };
 
-        Config::of_path(&config_path).map_or_else(
+        Config::of_file(&config_path).map_or_else(
             |_err| -> anyhow::Result<Config> {
                 println!(
                     "Creating new configuration file at: \n\t{}",
@@ -57,7 +57,7 @@ impl AppDataBuilder {
         };
 
         let mut cache = Cache::new(cache_file, cache_dir);
-        let _ = cache.of_path();
+        let _ = cache.of_file();
         Ok(cache)
     }
 }

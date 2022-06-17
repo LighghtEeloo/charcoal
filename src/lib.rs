@@ -16,5 +16,5 @@ pub use builder::AppDataBuilder;
 pub use cache::Cache;
 pub use cli::Args;
 pub use config::{Config, Toggle};
-pub use query::WordQuery;
+pub use query::{CacheQuery, WebQuery, WordQuery};
 pub use speech::Speech;

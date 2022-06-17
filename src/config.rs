@@ -1,5 +1,9 @@
 use serde::{Deserialize, Serialize};
-use std::{collections::HashSet, fs, io, path::Path};
+use std::{
+    collections::HashSet,
+    fs, io,
+    path::{Path, PathBuf},
+};
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum Toggle {
@@ -13,7 +17,7 @@ pub enum Toggle {
 impl Toggle {
     pub fn all() -> impl Iterator<Item = Toggle> {
         use Toggle::*;
-        vec![
+        [
             WithPronunciation,
             WithVariants,
             WithAuthority,
@@ -26,23 +30,24 @@ impl Toggle {
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {
+    #[serde(skip)]
+    pub path: Option<PathBuf>,
     pub toggles: HashSet<Toggle>,
 }
 
 impl Config {
-    pub fn new() -> Self {
-        Self {
-            toggles: HashSet::new(),
-        }
-    }
     pub fn all() -> Self {
         Self {
+            path: None,
             toggles: Toggle::all().collect(),
         }
     }
-    pub fn of_path(path: impl AsRef<Path>) -> io::Result<Self> {
-        let content = fs::read_to_string(path)?;
-        Ok(toml::from_str(&content)?)
+    pub fn of_file(path: impl AsRef<Path>) -> io::Result<Self> {
+        let content = fs::read_to_string(&path)?;
+        Ok(Self {
+            path: Some(path.as_ref().to_path_buf()),
+            ..toml::from_str(&content)?
+        })
     }
     pub fn to_file(&self, path: impl AsRef<Path>) -> anyhow::Result<()> {
         let s = toml::to_string_pretty(&self)?;
@@ -78,4 +83,3 @@ impl Config {
         }
     }
 }
-

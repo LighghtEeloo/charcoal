@@ -1,12 +1,11 @@
+use crate::WordQuery;
 use std::{
     collections::{hash_map::DefaultHasher, HashSet},
-    fs::{self, File, OpenOptions},
+    fs::{self, OpenOptions},
     hash::{Hash, Hasher},
     io,
     path::PathBuf,
 };
-
-use crate::WordQuery;
 
 pub struct Cache {
     cache_file: PathBuf,
@@ -42,7 +41,7 @@ impl Cache {
             table,
         }
     }
-    pub fn of_path(&mut self) -> io::Result<()> {
+    pub fn of_file(&mut self) -> io::Result<()> {
         let content = fs::read_to_string(&self.cache_file)?;
         let table = serde_json::from_str(&content)?;
         self.table = table;
@@ -67,16 +66,16 @@ impl Cache {
         path.push(s);
         path
     }
-    fn read_file_vec(&self, word: impl AsRef<str>) -> anyhow::Result<WordSegment> {
-        let path = self.get_file_path(&word);
-
-        let file = File::open(path)?;
-        let vec = bincode::deserialize_from(&file)?;
-
+    fn read_file_vec(reader: impl io::Read) -> anyhow::Result<WordSegment> {
+        let vec = bincode::deserialize_from(reader)?;
         Ok(vec)
     }
     fn read_word_from_file(&self, word: impl AsRef<str>) -> anyhow::Result<WordQuery> {
-        self.read_file_vec(&word)?
+        let file = {
+            let path = self.get_file_path(&word);
+            OpenOptions::new().read(true).open(path)
+        }?;
+        Cache::read_file_vec(&file)?
             .into_iter()
             .find_map(|(s, word_query)| {
                 if s == word.as_ref() {
@@ -103,13 +102,14 @@ impl Cache {
             .ok_or_else(|| CacheMiss::new())
     }
     fn write_word_to_file(&self, word: String, word_query: WordQuery) -> anyhow::Result<()> {
-        let mut vec = self.read_file_vec(&word).unwrap_or_default();
+        let file = {
+            let path = self.get_file_path(&word);
+            OpenOptions::new().create(true).write(true).open(path)?
+        };
+        let mut vec = Cache::read_file_vec(&file).unwrap_or_default();
         // only write when not contained already
         let should_write = vec.iter().find(|(s, _)| s == &word).is_none();
         if should_write {
-            let path = self.get_file_path(&word);
-            let file = OpenOptions::new().create(true).write(true).open(path)?;
-
             vec.push((word, word_query));
             bincode::serialize_into(file, &vec)?;
         }

@@ -2,10 +2,10 @@ mod authority;
 mod sentence;
 mod utils;
 
-use self::sentence::Sentence;
+use self::{sentence::Sentence, utils::*};
+use crate::Cache;
 use scraper::{ElementRef, Html, Selector};
 use serde::{Deserialize, Serialize};
-use utils::*;
 
 pub trait Select {
     type Target;
@@ -31,8 +31,10 @@ impl WordQuery {
     }
 }
 
-impl Select for WordQuery {
-    type Target = Self;
+pub struct WebQuery;
+
+impl Select for WebQuery {
+    type Target = WordQuery;
 
     fn select(elem: ElementRef) -> anyhow::Result<Self::Target> {
         let doc = elem;
@@ -89,8 +91,11 @@ impl Select for WordQuery {
     }
 }
 
-impl WordQuery {
-    pub async fn query(query_word: impl AsRef<str>) -> anyhow::Result<WordQuery> {
+impl WebQuery {
+    pub fn new() -> Self {
+        Self
+    }
+    pub async fn query(&mut self, query_word: impl AsRef<str>) -> anyhow::Result<WordQuery> {
         let youdao_dict_url = url::Url::parse(&format!(
             "http://dict.youdao.com/search?q={}",
             query_word.as_ref()
@@ -99,6 +104,19 @@ impl WordQuery {
         let xml = get_html(youdao_dict_url).await?;
         let doc = Html::parse_document(&xml);
 
-        Self::select(doc.root_element())
+        WebQuery::select(doc.root_element())
+    }
+}
+
+pub struct CacheQuery<'a> {
+    cache: &'a mut Cache,
+}
+
+impl<'a> CacheQuery<'a> {
+    pub fn new(cache: &'a mut Cache) -> Self {
+        Self { cache }
+    }
+    pub async fn query(&mut self, query_word: impl AsRef<str>) -> anyhow::Result<WordQuery> {
+        self.cache.query(query_word)
     }
 }

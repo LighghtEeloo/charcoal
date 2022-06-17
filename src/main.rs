@@ -1,4 +1,4 @@
-use charcoal::{AppDataBuilder, Args, Speech, WordQuery};
+use charcoal::{AppDataBuilder, Args, CacheQuery, Speech, WebQuery};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -19,11 +19,11 @@ async fn main() -> anyhow::Result<()> {
 
     let word_speech = speech.speak(&word);
     let word_query = {
-        if let Ok(word_query) = cache.query(&word) {
+        if let Ok(word_query) = CacheQuery::new(&mut cache).query(&word).await {
             word_query
         } else {
-            let word_query = WordQuery::query(&word).await?;
-            cache.store(word.clone(), word_query.clone())?;
+            let word_query = WebQuery::new().query(&word).await?;
+            cache.store(&word, word_query.clone())?;
             word_query
         }
     };
