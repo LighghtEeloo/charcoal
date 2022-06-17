@@ -7,11 +7,9 @@ impl Select for Sentence {
 
     fn select(elem: ElementRef) -> anyhow::Result<Self::Target> {
         let sel = Selector::parse("#bilingual.trans-container li").unwrap();
-        let mut vec = Vec::new();
-        for child in elem.select(&sel) {
-            vec.push(Sen::select(child)?)
-        }
-        Ok(vec)
+        Ok(elem.select(&sel).filter_map(|child| {
+            Sen::select(child).ok()
+        }).collect())
     }
 }
 

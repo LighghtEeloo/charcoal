@@ -4,6 +4,7 @@ mod utils;
 
 use self::sentence::Sentence;
 use scraper::{ElementRef, Html, Selector};
+use serde::{Deserialize, Serialize};
 use utils::*;
 
 pub trait Select {
@@ -11,7 +12,7 @@ pub trait Select {
     fn select(elem: ElementRef) -> anyhow::Result<Self::Target>;
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct WordQuery {
     pub pronunciation: Vec<(String, String)>,
     pub brief: Vec<String>,
