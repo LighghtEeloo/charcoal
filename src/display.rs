@@ -1,8 +1,8 @@
 use colored::Colorize;
 
-use super::{Config, Toggle, WordQuery};
+use super::{Config, Toggle, WordEntry};
 
-impl WordQuery {
+impl WordEntry {
     pub fn display(&self, word: impl AsRef<str>, config: &Config) {
         use Toggle::*;
         print!("{}\n", word.as_ref().bright_red());

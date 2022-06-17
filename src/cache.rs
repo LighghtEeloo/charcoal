@@ -1,4 +1,4 @@
-use crate::WordQuery;
+use crate::WordEntry;
 use std::{
     collections::{hash_map::DefaultHasher, HashSet},
     fs::{self, OpenOptions},
@@ -13,7 +13,7 @@ pub struct Cache {
     table: HashSet<String>,
 }
 
-type WordSegment = Vec<(String, WordQuery)>;
+type WordSegment = Vec<(String, WordEntry)>;
 
 #[derive(Debug)]
 struct CacheMiss;
@@ -70,7 +70,7 @@ impl Cache {
         let vec = bincode::deserialize_from(reader)?;
         Ok(vec)
     }
-    fn read_word_from_file(&self, word: impl AsRef<str>) -> anyhow::Result<WordQuery> {
+    fn read_word_from_file(&self, word: impl AsRef<str>) -> anyhow::Result<WordEntry> {
         let file = {
             let path = self.get_file_path(&word);
             OpenOptions::new().read(true).open(path)
@@ -86,7 +86,7 @@ impl Cache {
             })
             .ok_or_else(|| CacheMiss::new())
     }
-    pub fn query(&mut self, word: impl AsRef<str>) -> anyhow::Result<WordQuery> {
+    pub fn query(&mut self, word: impl AsRef<str>) -> anyhow::Result<WordEntry> {
         self.table
             .get(word.as_ref())
             .cloned()
@@ -101,7 +101,7 @@ impl Cache {
             })
             .ok_or_else(|| CacheMiss::new())
     }
-    fn write_word_to_file(&self, word: String, word_query: WordQuery) -> anyhow::Result<()> {
+    fn write_word_to_file(&self, word: String, word_query: WordEntry) -> anyhow::Result<()> {
         let file = {
             let path = self.get_file_path(&word);
             OpenOptions::new().create(true).write(true).open(path)?
@@ -115,7 +115,7 @@ impl Cache {
         }
         Ok(())
     }
-    pub fn store(&mut self, word: impl AsRef<str>, word_query: WordQuery) -> anyhow::Result<()> {
+    pub fn store(&mut self, word: impl AsRef<str>, word_query: WordEntry) -> anyhow::Result<()> {
         // only update when not in cache table
         if !self.table.contains(word.as_ref()) {
             let word = word.as_ref().to_owned();
