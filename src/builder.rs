@@ -1,5 +1,6 @@
 use crate::{Cache, Config};
 use directories_next::ProjectDirs;
+use log::info;
 use std::fs;
 
 pub struct AppDataBuilder {
@@ -33,7 +34,7 @@ impl AppDataBuilder {
 
         Config::of_file(&config_path).map_or_else(
             |_err| -> anyhow::Result<Config> {
-                println!(
+                info!(
                     "Creating new configuration file at: \n\t{}",
                     config_path.display()
                 );
@@ -56,8 +57,13 @@ impl AppDataBuilder {
             (cache_file, cache_dir)
         };
 
-        let mut cache = Cache::new(cache_file, cache_dir);
-        let _ = cache.of_file();
+        let mut cache = Cache::new(cache_file.clone(), cache_dir);
+        if let Err(_) = cache.of_file() {
+            info!(
+                "Potentially creating new cache file at: \n\t{}",
+                cache_file.display()
+            );
+        }
         Ok(cache)
     }
 }
