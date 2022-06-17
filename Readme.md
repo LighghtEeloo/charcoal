@@ -12,7 +12,7 @@ cd charcoal
 cargo build --all
 ```
 
-As the crate becomes stable, publishing via cargo, AUR and other major package managers will be available.
+As the crate becomes stable, publishing via cargo, AUR and other major package managers will be available as an option.
 
 ## Dependency
 
