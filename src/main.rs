@@ -23,17 +23,8 @@ async fn query_main(args: cli::QueryArgs) -> anyhow::Result<()> {
     }
 
     let word_speech = Speech::spawn(word.to_owned(), cache.to_owned(), config.speak);
-    let word_query = {
-        let cache_query_res = query::FromCache::new(&mut cache).query(&word).await;
-        cache_query_res.map_or_else(
-            |_err| -> anyhow::Result<charcoal::WordEntry> {
-                futures::executor::block_on(
-                    query::FromYoudict::new().query_and_store(&word, &mut cache),
-                )
-            },
-            |word_query| Ok(word_query),
-        )?
-    };
+    let word_query = (query::FromCache::new(&mut cache).query(&word).await)
+        .or_else(|_err| query::FromYoudict::new().query_and_store(&word, &mut cache))?;
 
     if word_query.is_empty() {
         println!("Word not found.");

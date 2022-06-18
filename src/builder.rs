@@ -30,10 +30,8 @@ impl AppBuilder {
         Ok(config_path)
     }
     pub fn config(&self) -> anyhow::Result<Config> {
-        Config::of_file(self.config_path()?).map_or_else(
-            |_err| -> anyhow::Result<Config> { self.config_fresh() },
-            |config| Ok(config),
-        )
+        Config::of_file(self.config_path()?)
+            .or_else(|_err| -> anyhow::Result<Config> { self.config_fresh() })
     }
     pub fn config_fresh(&self) -> anyhow::Result<Config> {
         let config_path = self.config_path()?;

@@ -22,13 +22,14 @@ impl FromYoudict {
 
         FromYoudict::select(doc.root_element())
     }
-    pub async fn query_and_store(
+    pub fn query_and_store(
         &mut self, word: impl AsRef<str>, cache: &mut Cache,
     ) -> anyhow::Result<WordEntry> {
-        let word_entry = self.query(&word).await?;
-        cache.store(&word, word_entry.clone())?;
-        Ok(word_entry)
-
+        futures::executor::block_on(async {
+            let word_entry = self.query(&word).await?;
+            cache.store(&word, word_entry.clone())?;
+            Ok(word_entry)
+        })
     }
 }
 
