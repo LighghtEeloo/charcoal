@@ -5,8 +5,8 @@ use std::{fs, io, path::PathBuf};
 pub struct AppBuilder {
     project_dirs: ProjectDirs,
     config_file: &'static str,
-    cache_file: &'static str,
     cache_dir: &'static str,
+    vault_dir: &'static str,
 }
 
 impl AppBuilder {
@@ -16,8 +16,8 @@ impl AppBuilder {
         Self {
             project_dirs,
             config_file: "config.toml",
-            cache_file: "cache.json",
             cache_dir: "cache",
+            vault_dir: "vault",
         }
     }
 }
@@ -47,23 +47,16 @@ impl AppBuilder {
     }
 
     pub fn cache(&self) -> anyhow::Result<Cache> {
-        let (cache_file, cache_dir) = {
-            let mut cache_file = self.project_dirs.cache_dir().to_owned();
-            let mut cache_dir = cache_file.clone();
-            // file path is ensured by dir
-            cache_file.push(self.cache_file);
-            cache_dir.push(self.cache_dir);
-            fs::create_dir_all(&cache_dir)?;
-            (cache_file, cache_dir)
+        let ensure = |dir| -> io::Result<PathBuf> {
+            let mut pathbuf = self.project_dirs.cache_dir().to_owned();
+            pathbuf.push(dir);
+            fs::create_dir_all(&pathbuf)?;
+            Ok(pathbuf)
         };
+        let cache_dir = ensure(self.cache_dir)?;
+        let vault_dir = ensure(self.vault_dir)?;
 
-        let mut cache = Cache::new(cache_file.clone(), cache_dir);
-        if let Err(_) = cache.of_file() {
-            log::info!(
-                "Potentially creating new cache file at: \n\t{}",
-                cache_file.display()
-            );
-        }
+        let cache = Cache::new(cache_dir, vault_dir);
         Ok(cache)
     }
 }
