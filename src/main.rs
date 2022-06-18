@@ -22,7 +22,7 @@ async fn query_main(args: cli::QueryArgs) -> anyhow::Result<()> {
         speak.twitch(&mut config.speak)
     }
 
-    let word_speech = Speech::spawn(word.to_owned(), cache.to_owned(), config.speak);
+    let word_speech = Speech::query(&word, &cache, config.speak);
     let word_query = WordEntry::query(&cache, &word).await?;
 
     if word_query.is_empty() {
