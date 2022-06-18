@@ -4,16 +4,17 @@ mod sentence;
 use self::sentence::Sentence;
 use crate::{entry, WordEntry};
 use scraper::{ElementRef, Selector};
+use whatlang::Lang;
 
 pub trait Select {
     type Target;
-    fn select(elem: ElementRef) -> anyhow::Result<Self::Target>;
+    fn select(elem: ElementRef, lang: &Lang) -> anyhow::Result<Self::Target>;
 }
 
 impl Select for entry::FromYoudict {
     type Target = WordEntry;
 
-    fn select(elem: ElementRef) -> anyhow::Result<Self::Target> {
+    fn select(elem: ElementRef, lang: &Lang) -> anyhow::Result<Self::Target> {
         let doc = elem;
         let pronunciation = {
             let sel = Selector::parse("span.pronounce").unwrap();
@@ -56,7 +57,7 @@ impl Select for entry::FromYoudict {
                 .collect()
         };
 
-        let sentence = Sentence::select(elem)?;
+        let sentence = Sentence::select(elem, lang)?;
 
         Ok(WordEntry {
             pronunciation,

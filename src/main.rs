@@ -20,8 +20,11 @@ async fn query_main(args: cli::QueryArgs) -> anyhow::Result<()> {
     let word = args.query.to_owned();
     config.apply(args);
 
-    let word_speech = Speech::query(&word, &cache, config.speak);
-    let word_query = WordEntry::query(&cache, &word).await?;
+    let lang = whatlang::detect(word.as_ref())
+        .expect("Language detection failed.")
+        .lang();
+    let word_speech = Speech::query(&word, &lang, &cache, config.speak);
+    let word_query = WordEntry::query(&word, &lang, &cache).await?;
 
     if word_query.is_empty() {
         println!("Word not found.");
@@ -63,6 +66,4 @@ async fn clean_main() -> anyhow::Result<()> {
 
 /* TODO
  * 4. Authority
- * 8. en_us / zh_cn
- * 9. concise mode in cli
  */

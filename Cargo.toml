@@ -38,3 +38,6 @@ scraper = "0.13"
 
 # play audio
 rodio = { version = "0.15", features = ["symphonia-mp3"]}
+
+# language
+whatlang = "0.16"

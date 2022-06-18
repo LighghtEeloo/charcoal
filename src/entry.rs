@@ -1,5 +1,6 @@
 use crate::{Cache, Select};
 use serde::{Deserialize, Serialize};
+use whatlang::Lang;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct WordEntry {
@@ -12,9 +13,9 @@ pub struct WordEntry {
 
 impl WordEntry {
     /// Query a word first from cache and then from the web
-    pub async fn query(cache: &Cache, word: impl AsRef<str>) -> anyhow::Result<Self> {
+    pub async fn query(word: impl AsRef<str>, lang: &Lang, cache: &Cache) -> anyhow::Result<Self> {
         (FromCache::new(cache).query(&word).await)
-            .or_else(|_err| FromYoudict::new().query_and_store(&word, cache))
+            .or_else(|_err| FromYoudict::new().query_and_store(word, lang, cache))
     }
 
     pub fn is_empty(&self) -> bool {
@@ -32,30 +33,30 @@ impl FromYoudict {
     pub fn new() -> Self {
         Self
     }
-    pub async fn query(&mut self, query_word: impl AsRef<str>) -> anyhow::Result<WordEntry> {
+    pub fn query_and_store(
+        &mut self, word: impl AsRef<str>, lang: &Lang, cache: &Cache,
+    ) -> anyhow::Result<WordEntry> {
+        futures::executor::block_on(async {
+            let word_entry = self.query(&word, lang).await?;
+            let file = cache.store(&word, "bin")?;
+            bincode::serialize_into(file, &word_entry)?;
+            Ok(word_entry)
+        })
+    }
+    pub async fn query(&mut self, word: impl AsRef<str>, lang: &Lang) -> anyhow::Result<WordEntry> {
         async fn get_html(url: impl AsRef<str> + reqwest::IntoUrl) -> anyhow::Result<String> {
             let body = reqwest::get(url).await?.text().await?;
             Ok(body)
         }
         let youdao_dict_url = url::Url::parse(&format!(
             "http://dict.youdao.com/search?q={}",
-            query_word.as_ref()
+            word.as_ref()
         ))?;
 
         let xml = get_html(youdao_dict_url).await?;
         let doc = scraper::Html::parse_document(&xml);
 
-        FromYoudict::select(doc.root_element())
-    }
-    pub fn query_and_store(
-        &mut self, word: impl AsRef<str>, cache: &Cache,
-    ) -> anyhow::Result<WordEntry> {
-        futures::executor::block_on(async {
-            let word_entry = self.query(&word).await?;
-            let file = cache.store(&word, "bin")?;
-            bincode::serialize_into(file, &word_entry)?;
-            Ok(word_entry)
-        })
+        FromYoudict::select(doc.root_element(), lang)
     }
 }
 
