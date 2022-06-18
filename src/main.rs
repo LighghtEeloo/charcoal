@@ -1,4 +1,4 @@
-use charcoal::{cli, AppDataBuilder, CacheQuery, Cli, Command, Speech, WebQuery};
+use charcoal::{cli, AppDataBuilder, query, Cli, Command, Speech};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -25,10 +25,10 @@ async fn query_main(args: cli::QueryArgs) -> anyhow::Result<()> {
 
     let word_speech = speech.speak(&word);
     let word_query = {
-        if let Ok(word_query) = CacheQuery::new(&mut cache).query(&word).await {
+        if let Ok(word_query) = query::FromCache::new(&mut cache).query(&word).await {
             word_query
         } else {
-            let word_query = WebQuery::new().query(&word).await?;
+            let word_query = query::FromYoudict::new().query(&word).await?;
             cache.store(&word, word_query.clone())?;
             word_query
         }

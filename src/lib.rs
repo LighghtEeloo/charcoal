@@ -18,7 +18,6 @@ pub use builder::AppDataBuilder;
 pub use cache::Cache;
 pub use cli::{Cli, Command};
 pub use config::Config;
-pub use query::{CacheQuery, WebQuery};
 pub use select::Select;
 pub use speech::Speech;
 pub use word::WordEntry;

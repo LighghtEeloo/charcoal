@@ -1,9 +1,9 @@
 use crate::{Cache, Select, WordEntry};
 use scraper::Html;
 
-pub struct WebQuery;
+pub struct FromYoudict;
 
-impl WebQuery {
+impl FromYoudict {
     pub fn new() -> Self {
         Self
     }
@@ -20,15 +20,15 @@ impl WebQuery {
         let xml = get_html(youdao_dict_url).await?;
         let doc = Html::parse_document(&xml);
 
-        WebQuery::select(doc.root_element())
+        FromYoudict::select(doc.root_element())
     }
 }
 
-pub struct CacheQuery<'a> {
+pub struct FromCache<'a> {
     cache: &'a mut Cache,
 }
 
-impl<'a> CacheQuery<'a> {
+impl<'a> FromCache<'a> {
     pub fn new(cache: &'a mut Cache) -> Self {
         Self { cache }
     }
