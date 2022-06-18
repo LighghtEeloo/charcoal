@@ -41,7 +41,7 @@ async fn query_main(args: cli::QueryArgs) -> anyhow::Result<()> {
     }
 
     word_query.display(&word, &config);
-    if let Err(err) = word_speech.join() {
+    if let Err(err) = word_speech.await {
         log::error!("An error occured in speech module: {:?}.", err)
     }
 

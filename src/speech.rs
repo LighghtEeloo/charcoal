@@ -1,11 +1,9 @@
 use crate::Cache;
-use futures::Future;
 use rodio::{Decoder, OutputStream, Sink};
 use std::{
     fs::File,
     io::{BufReader, Write},
     path::PathBuf,
-    thread::JoinHandle,
 };
 
 /// Currently only a minimium set of langs are supported.
@@ -42,16 +40,14 @@ impl std::fmt::Display for Lang {
 pub struct Speech;
 
 impl Speech {
-    pub fn spawn(
+    pub async fn spawn(
         word: String, _cache: Cache, is_speak: bool,
-    ) -> JoinHandle<impl Future<Output = anyhow::Result<()>>> {
-        std::thread::spawn(move || async move {
+    ) -> anyhow::Result<()> {
             if is_speak {
                 Speech::speak(word).await
             } else {
                 Ok(())
             }
-        })
     }
 
     async fn speak(word: impl AsRef<str>) -> anyhow::Result<()> {
