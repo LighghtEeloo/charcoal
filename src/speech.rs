@@ -1,9 +1,11 @@
-use crate::Config;
+use crate::Cache;
+use futures::Future;
 use rodio::{Decoder, OutputStream, Sink};
 use std::{
     fs::File,
     io::{BufReader, Write},
     path::PathBuf,
+    thread::JoinHandle,
 };
 
 /// Currently only a minimium set of langs are supported.
@@ -37,48 +39,47 @@ impl std::fmt::Display for Lang {
     }
 }
 
-async fn __speak(word: impl AsRef<str>) -> anyhow::Result<()> {
-    let url = format!(
-        "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl={}&q={}",
-        Lang::new(&word),
-        word.as_ref()
-    );
-    let filename = PathBuf::from("./audio.mp3");
+pub struct Speech;
 
-    // request
-    let res = reqwest::get(url).await?;
-
-    let mut file = File::create(&filename)?;
-    let bytes = res.bytes().await?;
-    file.write_all(&bytes)?;
-
-    // rodio
-    // Get a output stream handle to the default physical sound device
-    let (_stream, stream_handle) = OutputStream::try_default()?;
-    let sink = Sink::try_new(&stream_handle)?;
-
-    let file = BufReader::new(File::open(&filename)?);
-    let source = Decoder::new(file)?;
-    sink.append(source);
-    sink.sleep_until_end();
-
-    std::fs::remove_file(filename)?;
-    Ok(())
-}
-
-pub struct Speech<'a> {
-    config: &'a Config,
-}
-
-impl<'a> Speech<'a> {
-    pub fn new(config: &'a Config) -> Self {
-        Self { config }
+impl Speech {
+    pub fn spawn(
+        word: String, _cache: Cache, is_speak: bool,
+    ) -> JoinHandle<impl Future<Output = anyhow::Result<()>>> {
+        std::thread::spawn(move || async move {
+            if is_speak {
+                Speech::speak(word).await
+            } else {
+                Ok(())
+            }
+        })
     }
-    pub async fn speak(&self, word: impl AsRef<str>) -> anyhow::Result<()> {
-        if self.config.speak {
-            __speak(word).await
-        } else {
-            Ok(())
-        }
+
+    async fn speak(word: impl AsRef<str>) -> anyhow::Result<()> {
+        let url = format!(
+            "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl={}&q={}",
+            Lang::new(&word),
+            word.as_ref()
+        );
+        let filename = PathBuf::from("./audio.mp3");
+
+        // request
+        let res = reqwest::get(url).await?;
+
+        let mut file = File::create(&filename)?;
+        let bytes = res.bytes().await?;
+        file.write_all(&bytes)?;
+
+        // rodio
+        // Get a output stream handle to the default physical sound device
+        let (_stream, stream_handle) = OutputStream::try_default()?;
+        let sink = Sink::try_new(&stream_handle)?;
+
+        let file = BufReader::new(File::open(&filename)?);
+        let source = Decoder::new(file)?;
+        sink.append(source);
+        sink.sleep_until_end();
+
+        std::fs::remove_file(filename)?;
+        Ok(())
     }
 }

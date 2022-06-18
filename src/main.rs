@@ -17,31 +17,32 @@ async fn query_main(args: cli::QueryArgs) -> anyhow::Result<()> {
     let mut config = app_builder.config()?;
     let mut cache = app_builder.cache()?;
 
+    let word = args.query;
     if let Some(speak) = args.speak {
         speak.twitch(&mut config.speak)
     }
 
-    let word = args.query;
-    let speech = Speech::new(&config);
-
-    let word_speech = speech.speak(&word);
+    let word_speech = Speech::spawn(word.to_owned(), cache.to_owned(), config.speak);
     let word_query = {
-        if let Ok(word_query) = query::FromCache::new(&mut cache).query(&word).await {
-            word_query
-        } else {
-            let word_query = query::FromYoudict::new().query(&word).await?;
-            cache.store(&word, word_query.clone())?;
-            word_query
-        }
+        let cache_query_res = query::FromCache::new(&mut cache).query(&word).await;
+        cache_query_res.map_or_else(
+            |_err| -> anyhow::Result<charcoal::WordEntry> {
+                futures::executor::block_on(
+                    query::FromYoudict::new().query_and_store(&word, &mut cache),
+                )
+            },
+            |word_query| Ok(word_query),
+        )?
     };
 
     if word_query.is_empty() {
-        println!("Word not found.")
-    } else {
-        word_query.display(&word, &config);
-        if let Err(err) = word_speech.await {
-            eprintln!("An error occured in google speech module: {}.", err)
-        }
+        println!("Word not found.");
+        return Ok(());
+    }
+
+    word_query.display(&word, &config);
+    if let Err(err) = word_speech.join() {
+        log::error!("An error occured in speech module: {:?}.", err)
     }
 
     Ok(())
