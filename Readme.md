@@ -16,38 +16,80 @@ As the crate becomes stable, publishing via cargo, AUR and other major package m
 
 ## Dependency
 
-Almost everything is self-contained, unless you need the speech utility:
-
-```sh
-# google_speech python library for online speech material
-pip3 install google_speech
-
-# install sox, with mp3 support, for playing sound
-# e.g. Arch
-sudo pacman -S sox libmad libid3tag twolame
-```
+No manually designated dependencies are required. See `Cargo.toml` if you are interested in the crates charcoal is using.
 
 ## Usage
 
+### Query
+
 ```sh
-charcoal <QUERY>
+charcoal query <QUERY>
 ```
 
-To see more options,
+where query can be shortened as `q`, `search`, or `s`.
+
+With `-s y` one can force the happening of a speech.
+
+### Edit
+
+You may want to edit the configuration file in an easy way. Charcoal gets you covered:
 
 ```sh
-charcoal --help
+charcoal edit
 ```
 
-Tip: aliasing `charcoal` to `chr` or anything shorter is recommended (`cc` if you don't mind?)
+And with `--reset` it will generate a brand new configuration in case anything gets wrong.
+
+For more details on configuration file, see *Configuration* section.
+
+### Clean (WIP)
+
+Charcoal caches up your queries, both text and audio. While it's nice for repetitive queries, it takes up some space. If you want, you can clean them with:
 
 ```sh
-alias chr="charcoal -s"
+charcoal clean
+```
+
+For more details on cache, see *Caching Strategy* section.
+
+### Help
+
+To see more options, run
+
+```sh
+charcoal help
+```
+
+for help on subcommands, or
+
+```sh
+charcoal query --help
+```
+
+for each subcommand, say, `query`.
+
+### Tip
+
+Aliasing `charcoal query -s y` to `chr` or anything shorter is recommended (`cc` if you don't mind?)
+
+```sh
+alias chr="charcoal query -s y"
 ```
 
 For debug:
 
 ```sh
 cd charcoal
-alias chr="RUST_LOG=info target/debug/charcoal -s"
+cargo build --all
+alias chr="RUST_LOG=info target/debug/charcoal query -s y"
 ```
+
+## Configuration (WIP)
+
+...
+
+## Caching Strategy
+
+As a tiny cli tool, charcoal can't guarantee 100% cache consistency; however, its caching strategy is delicately designed such that inconsistency is rare and of little harm.
+
+...
