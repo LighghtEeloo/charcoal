@@ -3,8 +3,13 @@ name = "charcoal"
 version = "0.1.0"
 edition = "2021"
 authors = ["LitiaEeloo <litiaeeloo@gmail.com>"]
-description = "Charcoal, a command line dictionary"
+description = "A command line dictionary"
 readme = "Readme.md"
+homepage = "https://github.com/LighghtEeloo/Charcoal"
+repository = "https://github.com/LighghtEeloo/Charcoal"
+license = "MIT"
+keywords = ["cli", "search", "translation", "translate"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 # error handling
