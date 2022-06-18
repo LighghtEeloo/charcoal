@@ -6,9 +6,9 @@ pub struct Config {
     #[serde(skip)]
     pub path: PathBuf,
     pub main_mode: MainMode,
+    pub speak: bool,
     #[serde(rename = "Normal")]
     pub normal: Normal,
-    pub speech: bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -35,7 +35,7 @@ impl Config {
                 with_variants: true,
                 with_sentence: true,
             },
-            speech: true,
+            speak: true,
         }
     }
     pub fn of_file(path: PathBuf) -> io::Result<Self> {
@@ -47,8 +47,5 @@ impl Config {
         let s = toml::to_string_pretty(&self)?;
         fs::write(&self.path, s)?;
         Ok(())
-    }
-    pub fn flip(b: &mut bool) {
-        *b = !*b;
     }
 }

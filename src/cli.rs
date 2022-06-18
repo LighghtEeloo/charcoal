@@ -9,8 +9,8 @@ pub struct Cli {
 }
 
 impl Cli {
-    pub fn new() -> Self {
-        Self::parse()
+    pub fn new() -> Command {
+        Self::parse().command
     }
 }
 
@@ -18,11 +18,14 @@ impl Cli {
 pub enum Command {
     /// Query words from online or offline
     #[clap(alias = "q")]
-    Query(CmdQuery),
+    Query(QueryArgs),
+    /// Edit the configuration file
+    #[clap(alias = "e")]
+    Edit,
 }
 
 #[derive(Args, Debug)]
-pub struct CmdQuery {
+pub struct QueryArgs {
     /// The word to be queried
     #[clap(value_parser)]
     pub query: String,
@@ -39,4 +42,14 @@ pub enum Toggle {
     N,
     /// Toggle
     T,
+}
+
+impl Toggle {
+    pub fn twitch(self, b: &mut bool) {
+        match self {
+            Toggle::Y => *b = true,
+            Toggle::N => *b = false,
+            Toggle::T => *b = !*b,
+        }
+    }
 }

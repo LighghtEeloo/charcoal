@@ -1,22 +1,23 @@
-use charcoal::{cli, AppDataBuilder, CacheQuery, Cli, Command, Speech, WebQuery, Config};
+use charcoal::{cli, AppDataBuilder, CacheQuery, Cli, Command, Speech, WebQuery};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     env_logger::init();
 
+    match Cli::new() {
+        Command::Query(args) => query_main(args).await,
+        Command::Edit => edit_main().await,
+    }
+}
+
+async fn query_main(args: cli::QueryArgs) -> anyhow::Result<()> {
     let app_data_builder = AppDataBuilder::new();
 
     let mut config = app_data_builder.config()?;
     let mut cache = app_data_builder.cache()?;
 
-    let cli = Cli::new();
-    let Command::Query(args) = cli.command;
     if let Some(speak) = args.speak {
-        match speak {
-            cli::Toggle::Y => config.speech = true,
-            cli::Toggle::N => config.speech = false,
-            cli::Toggle::T => Config::flip(&mut config.speech),
-        }
+        speak.twitch(&mut config.speak)
     }
 
     let word = args.query;
@@ -45,7 +46,18 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
+async fn edit_main() -> anyhow::Result<()> {
+    let editor = std::env!("EDITOR");
+    let config_path = AppDataBuilder::new().config()?.path;
+
+    let mut child = std::process::Command::new(editor).args([config_path]).spawn()?;
+    child.wait()?;
+    Ok(())
+}
+
 /* TODO
  * 1. Config & Cli
  * 4. Authority
+ * 5. Better audio
+ * 6. Better cache consistency with audio
  */

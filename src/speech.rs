@@ -22,7 +22,7 @@ impl<'a> Speech<'a> {
         Self { config }
     }
     pub async fn speak(&self, word: impl AsRef<str>) -> anyhow::Result<()> {
-        if self.config.speech {
+        if self.config.speak {
             __speak(word).await
         } else {
             Ok(())
