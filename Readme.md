@@ -28,7 +28,7 @@ charcoal query <QUERY>
 
 where query can be shortened as `q`, `search`, or `s`.
 
-With `-s y` one can force the happening of a speech.
+With `-s` or `--speak-as true` one can force the happening of a speech.
 
 ### Edit
 
@@ -70,10 +70,10 @@ for each subcommand, say, `query`.
 
 ### Tip
 
-Aliasing `charcoal query -s y` to `chr` or anything shorter is recommended (`cc` if you don't mind?)
+Aliasing `charcoal query -s` to `chr` or anything shorter is recommended (`cc` if you don't mind?)
 
 ```sh
-alias chr="charcoal query -s y"
+alias chr="charcoal query -s"
 ```
 
 For debug:

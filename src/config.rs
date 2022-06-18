@@ -1,4 +1,4 @@
-use crate::cli::QueryArgs;
+use crate::cli::{QueryArgs, Toggle};
 use serde::{Deserialize, Serialize};
 use std::{fs, io, path::PathBuf};
 
@@ -49,13 +49,20 @@ impl Config {
         fs::write(&self.path, s)?;
         Ok(())
     }
-    pub fn apply(&mut self, args: QueryArgs) {
-        if let Some(speak) = args.speak {
-            speak.twitch(&mut self.speak);
+    pub fn apply(&mut self, mut args: QueryArgs) {
+        if args.speak {
+            args.speak_as = Some(Toggle::True);
         }
-        if let Some(concise) = args.concise {
-            concise.counter_twitch(&mut self.normal.with_sentence);
-            concise.counter_twitch(&mut self.normal.with_variants);
+        if let Some(speak_as) = args.speak_as {
+            speak_as.twitch(&mut self.speak);
+        }
+
+        if args.concise {
+            args.concise_as = Some(Toggle::True);
+        }
+        if let Some(concise_as) = args.concise_as {
+            concise_as.counter_twitch(&mut self.normal.with_sentence);
+            concise_as.counter_twitch(&mut self.normal.with_variants);
         }
     }
 }

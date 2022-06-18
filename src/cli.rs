@@ -32,12 +32,18 @@ pub struct QueryArgs {
     /// The word to be queried
     #[clap(value_parser)]
     pub query: String,
+    /// Speak aloud
+    #[clap(value_parser, short, long)]
+    pub speak: bool,
     /// Whether to speak aloud
+    #[clap(value_parser, long)]
+    pub speak_as: Option<Toggle>,
+    /// Be concise
     #[clap(value_parser, short, long)]
-    pub speak: Option<Toggle>,
+    pub concise: bool,
     /// Whether to be concise
-    #[clap(value_parser, short, long)]
-    pub concise: Option<Toggle>,
+    #[clap(value_parser, long)]
+    pub concise_as: Option<Toggle>,
 }
 
 #[derive(Args, Debug)]
@@ -49,27 +55,27 @@ pub struct EditArgs {
 
 #[derive(Clone, Debug, ValueEnum)]
 pub enum Toggle {
-    /// Yes
-    Y,
-    /// No
-    N,
-    /// Toggle
-    T,
+    /// True
+    True,
+    /// False
+    False,
+    /// Flip
+    Flip,
 }
 
 impl Toggle {
     pub fn twitch(&self, b: &mut bool) {
         match self {
-            Toggle::Y => *b = true,
-            Toggle::N => *b = false,
-            Toggle::T => *b = !*b,
+            Toggle::True => *b = true,
+            Toggle::False => *b = false,
+            Toggle::Flip => *b = !*b,
         }
     }
     pub fn counter_twitch(&self, b: &mut bool) {
         match self {
-            Toggle::Y => *b = false,
-            Toggle::N => *b = true,
-            Toggle::T => *b = !*b,
+            Toggle::True => *b = false,
+            Toggle::False => *b = true,
+            Toggle::Flip => *b = !*b,
         }
     }
 }
