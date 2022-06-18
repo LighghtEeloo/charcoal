@@ -2,21 +2,13 @@
 //!
 //! Charcoal uses youdao dict api and google speech. Inspired by wudao-dict.
 
-#![allow(dead_code)]
+pub mod app;
+pub mod word;
 
-pub mod builder;
-pub mod cache;
-pub mod cli;
-pub mod config;
-pub mod display;
-pub mod entry;
-pub mod select;
-pub mod speech;
-
-pub use builder::AppBuilder;
-pub use cache::Cache;
-pub use cli::{Cli, Command};
-pub use config::Config;
-pub use entry::WordEntry;
-pub use select::Select;
-pub use speech::Speech;
+pub use app::builder::AppBuilder;
+pub use app::cache::Cache;
+pub use app::cli::{Cli, Command};
+pub use app::config::Config;
+pub use word::WordEntry;
+pub use word::select::Select;
+pub use word::speech::Speech;

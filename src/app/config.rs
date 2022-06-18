@@ -1,4 +1,4 @@
-use crate::cli::{QueryArgs, Toggle};
+use super::cli::{QueryArgs, Toggle};
 use serde::{Deserialize, Serialize};
 use std::{fs, io, path::PathBuf};
 

@@ -7,8 +7,8 @@ An alternative to wudao-dict. With colorized output and optional speech.
 Just as usual for normal developing Rust crates:
 
 ```sh
-git clone git@github.com:LighghtEeloo/Charcoal.git ./charcoal
-cd charcoal
+git clone git@github.com:LighghtEeloo/Charcoal.git
+cd Charcoal
 cargo build --all
 ```
 
@@ -17,7 +17,7 @@ As the crate becomes stable, publishing via cargo, AUR and other major package m
 
 ### Small Tips Ahead
 
-Aliasing common command to `chr` or anything shorter is recommended (`cc` if you don't mind?)
+Aliasing common command to `chr`, `wd` or anything shorter is recommended (`cc` if you don't mind?)
 
 ```sh
 alias chr="char-coal query -s"
@@ -26,7 +26,7 @@ alias chr="char-coal query -s"
 For debug:
 
 ```sh
-cd charcoal
+cd Charcoal
 cargo build --all
 alias chr="RUST_LOG=info target/debug/char-coal query -s"
 ```

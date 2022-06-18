@@ -2,7 +2,7 @@ mod authority;
 mod sentence;
 
 use self::sentence::Sentence;
-use crate::{entry, WordEntry};
+use super::{FromYoudict, WordEntry};
 use scraper::{ElementRef, Selector};
 use whatlang::Lang;
 
@@ -11,7 +11,7 @@ pub trait Select {
     fn select(elem: ElementRef, lang: &Lang) -> anyhow::Result<Self::Target>;
 }
 
-impl Select for entry::FromYoudict {
+impl Select for FromYoudict {
     type Target = WordEntry;
 
     fn select(elem: ElementRef, lang: &Lang) -> anyhow::Result<Self::Target> {

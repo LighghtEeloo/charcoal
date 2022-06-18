@@ -1,3 +1,7 @@
+pub mod display;
+pub mod select;
+pub mod speech;
+
 use crate::{Cache, Select};
 use serde::{Deserialize, Serialize};
 use whatlang::Lang;
