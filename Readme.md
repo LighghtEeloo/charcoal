@@ -81,13 +81,33 @@ For debug:
 ```sh
 cd charcoal
 cargo build --all
-alias chr="RUST_LOG=info target/debug/charcoal query -s y"
+alias chr="RUST_LOG=info target/debug/charcoal query -s"
 ```
 
 ## Configuration
 
-Configurations are straight forward. Just change the bools and they're yours.
+Configurations are straight forward. Just change the booleans and they're yours.
 
 ## Caching Strategy
 
 As a tiny cli tool, charcoal can't guarantee 100% cache consistency; however, its caching strategy is delicately designed such that inconsistency is rare and of little harm.
+
+Only ascii with out space will be saved by name, under `cache` directory, to achieve better compatibility; the rest will be hashed and then saved under `vault` directory.
+
+Both text and audio will be cached.
+
+## License
+
+This repo uses MIT License.
+
+## Disclaimer and Promises
+
+Though it's unlikely, this software may harm data. Use at your own risk.
+
+No privacy collection will be performed.
+
+## Credits
+
+@TomCC7 for kindly supporting, testing and making suggestions for charcoal.
+
+@BinhaoQin for providing advice (and patience!) on PKGBUILD.
