@@ -1,19 +1,42 @@
-use clap::Parser;
+use clap::{Args, Parser, Subcommand, ValueEnum};
 
-/// a command line dictionary
+/// A command line dictionary
 #[derive(Parser, Debug)]
 #[clap(version, about)]
-pub struct Args {
+pub struct Cli {
+    #[clap(subcommand)]
+    pub command: Command,
+}
+
+impl Cli {
+    pub fn new() -> Self {
+        Self::parse()
+    }
+}
+
+#[derive(Subcommand, Debug)]
+pub enum Command {
+    /// Query words from online or offline
+    #[clap(alias = "q")]
+    Query(CmdQuery),
+}
+
+#[derive(Args, Debug)]
+pub struct CmdQuery {
     /// The word to be queried
     #[clap(value_parser)]
     pub query: String,
     /// Whether to speak aloud
-    #[clap(short, long, value_parser, default_value_t = false)]
-    pub speak: bool,
+    #[clap(value_parser, short, long)]
+    pub speak: Option<Toggle>,
 }
 
-impl Args {
-    pub fn new() -> Self {
-        Self::parse()
-    }
+#[derive(Clone, Debug, ValueEnum)]
+pub enum Toggle {
+    /// Yes
+    Y,
+    /// No
+    N,
+    /// Toggle
+    T,
 }

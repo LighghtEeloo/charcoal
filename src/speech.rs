@@ -1,4 +1,4 @@
-use crate::{Config, Toggle};
+use crate::{config::Toggle, Config};
 
 async fn __speak(word: impl AsRef<str>) -> anyhow::Result<()> {
     // let mut ttss = tts::Tts::default()?;
@@ -14,7 +14,7 @@ async fn __speak(word: impl AsRef<str>) -> anyhow::Result<()> {
 }
 
 pub struct Speech<'a> {
-    config: &'a Config
+    config: &'a Config,
 }
 
 impl<'a> Speech<'a> {

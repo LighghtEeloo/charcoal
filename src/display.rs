@@ -1,6 +1,5 @@
+use crate::{config::Toggle, Config, WordEntry};
 use colored::Colorize;
-
-use super::{Config, Toggle, WordEntry};
 
 impl WordEntry {
     pub fn display(&self, word: impl AsRef<str>, config: &Config) {
@@ -26,9 +25,15 @@ impl WordEntry {
 
         if config.check(WithSentence) {
             for (i, (ori, trans)) in self.sentence.iter().enumerate() {
-                let idx_str = format!("{}. ", i+1);
+                let idx_str = format!("{}. ", i + 1);
                 let idx_blank = " ".repeat(idx_str.len());
-                print!("{}{}\n{}{}\n", idx_str, ori.bright_green(), idx_blank, trans.yellow())
+                print!(
+                    "{}{}\n{}{}\n",
+                    idx_str,
+                    ori.bright_green(),
+                    idx_blank,
+                    trans.yellow()
+                )
             }
         }
     }
