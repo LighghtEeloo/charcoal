@@ -2,7 +2,9 @@
 name = "charcoal"
 version = "0.1.0"
 edition = "2021"
-authors = ["LitiaEeloo"]
+authors = ["LitiaEeloo <litiaeeloo@gmail.com>"]
+description = "Charcoal, a command line dictionary"
+readme = "Readme.md"
 
 [dependencies]
 # error handling
@@ -37,3 +39,4 @@ scraper = "0.13"
 # text to speech
 google_speech = "0.1"
 # tts = "0.22"
+# https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=hibernate
