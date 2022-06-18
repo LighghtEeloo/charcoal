@@ -2,7 +2,7 @@ mod authority;
 mod sentence;
 
 use self::sentence::Sentence;
-use crate::{query, WordEntry};
+use crate::{entry, WordEntry};
 use scraper::{ElementRef, Selector};
 
 pub trait Select {
@@ -10,7 +10,7 @@ pub trait Select {
     fn select(elem: ElementRef) -> anyhow::Result<Self::Target>;
 }
 
-impl Select for query::FromYoudict {
+impl Select for entry::FromYoudict {
     type Target = WordEntry;
 
     fn select(elem: ElementRef) -> anyhow::Result<Self::Target> {

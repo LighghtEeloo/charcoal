@@ -1,4 +1,4 @@
-use charcoal::{cli, query, AppBuilder, Cli, Command, Speech};
+use charcoal::{cli, AppBuilder, Cli, Command, Speech, WordEntry};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -15,7 +15,7 @@ async fn query_main(args: cli::QueryArgs) -> anyhow::Result<()> {
     let app_builder = AppBuilder::new();
 
     let mut config = app_builder.config()?;
-    let mut cache = app_builder.cache()?;
+    let cache = app_builder.cache()?;
 
     let word = args.query;
     if let Some(speak) = args.speak {
@@ -23,8 +23,7 @@ async fn query_main(args: cli::QueryArgs) -> anyhow::Result<()> {
     }
 
     let word_speech = Speech::spawn(word.to_owned(), cache.to_owned(), config.speak);
-    let word_query = (query::FromCache::new(&mut cache).query(&word).await)
-        .or_else(|_err| query::FromYoudict::new().query_and_store(&word, &mut cache))?;
+    let word_query = WordEntry::query(&cache, &word).await?;
 
     if word_query.is_empty() {
         println!("Word not found.");

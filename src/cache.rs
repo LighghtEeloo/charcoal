@@ -90,7 +90,7 @@ impl Cache {
         bincode::serialize_into(file, &word_entry)?;
         Ok(())
     }
-    pub fn store(&mut self, word: impl AsRef<str>, word_query: WordEntry) -> anyhow::Result<()> {
+    pub fn store(&self, word: impl AsRef<str>, word_query: WordEntry) -> anyhow::Result<()> {
         let file = {
             let path = self.get_file_path(&word);
             OpenOptions::new().create(true).write(true).open(path)?
