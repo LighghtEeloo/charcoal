@@ -1,4 +1,4 @@
-use crate::{config::Toggle, Config};
+use crate::Config;
 
 async fn __speak(word: impl AsRef<str>) -> anyhow::Result<()> {
     // let mut ttss = tts::Tts::default()?;
@@ -22,7 +22,7 @@ impl<'a> Speech<'a> {
         Self { config }
     }
     pub async fn speak(&self, word: impl AsRef<str>) -> anyhow::Result<()> {
-        if self.config.check(Toggle::WithSpeech) {
+        if self.config.speech {
             __speak(word).await
         } else {
             Ok(())

@@ -1,4 +1,4 @@
-use charcoal::{cli, config, AppDataBuilder, CacheQuery, Cli, Command, Speech, WebQuery};
+use charcoal::{cli, AppDataBuilder, CacheQuery, Cli, Command, Speech, WebQuery, Config};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -12,11 +12,10 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::new();
     let Command::Query(args) = cli.command;
     if let Some(speak) = args.speak {
-        use config::Toggle::WithSpeech;
         match speak {
-            cli::Toggle::Y => config.turn_on(WithSpeech),
-            cli::Toggle::N => config.turn_off(WithSpeech),
-            cli::Toggle::T => config.flip(WithSpeech),
+            cli::Toggle::Y => config.speech = true,
+            cli::Toggle::N => config.speech = false,
+            cli::Toggle::T => Config::flip(&mut config.speech),
         }
     }
 

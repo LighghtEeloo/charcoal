@@ -26,20 +26,20 @@ impl AppDataBuilder {
 impl AppDataBuilder {
     pub fn config(&self) -> anyhow::Result<Config> {
         let config_path = {
-            let mut config_path = self.project_dirs.config_dir().to_path_buf();
+            let mut config_path = self.project_dirs.config_dir().to_owned();
             fs::create_dir_all(&config_path)?;
             config_path.push(self.config_file);
             config_path
         };
 
-        Config::of_file(&config_path).map_or_else(
+        Config::of_file(config_path.clone()).map_or_else(
             |_err| -> anyhow::Result<Config> {
                 info!(
                     "Creating new configuration file at: \n\t{}",
                     config_path.display()
                 );
-                let config = Config::default();
-                config.to_file(&config_path)?;
+                let config = Config::new(config_path);
+                config.to_file()?;
                 Ok(config)
             },
             |config| Ok(config),
@@ -48,7 +48,7 @@ impl AppDataBuilder {
 
     pub fn cache(&self) -> anyhow::Result<Cache> {
         let (cache_file, cache_dir) = {
-            let mut cache_file = self.project_dirs.cache_dir().to_path_buf();
+            let mut cache_file = self.project_dirs.cache_dir().to_owned();
             let mut cache_dir = cache_file.clone();
             // file path is ensured by dir
             cache_file.push(self.cache_file);
