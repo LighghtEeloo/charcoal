@@ -42,7 +42,7 @@ And with `--reset` it will generate a brand new configuration in case anything g
 
 For more details on configuration file, see *Configuration* section.
 
-### Clean (WIP)
+### Clean
 
 Charcoal caches up your queries, both text and audio. While it's nice for repetitive queries, it takes up some space. If you want, you can clean them with:
 
@@ -84,12 +84,10 @@ cargo build --all
 alias chr="RUST_LOG=info target/debug/charcoal query -s y"
 ```
 
-## Configuration (WIP)
+## Configuration
 
-...
+Configurations are straight forward. Just change the bools and they're yours.
 
 ## Caching Strategy
 
 As a tiny cli tool, charcoal can't guarantee 100% cache consistency; however, its caching strategy is delicately designed such that inconsistency is rare and of little harm.
-
-...

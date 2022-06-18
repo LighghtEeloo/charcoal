@@ -70,7 +70,10 @@ impl Cache {
         Ok(file)
     }
 
-    pub fn clean(&mut self) -> io::Result<()> {
-        todo!("cache cleaning not implemented")
+    pub fn clean(&self) -> io::Result<()> {
+        fs::remove_dir_all(&self.cache_dir)?;
+        fs::remove_dir_all(&self.vault_dir)?;
+
+        Ok(())
     }
 }
