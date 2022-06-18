@@ -14,7 +14,7 @@ impl WordEntry {
     /// Query a word first from cache and then from the web
     pub async fn query(cache: &Cache, word: impl AsRef<str>) -> anyhow::Result<Self> {
         (FromCache::new(cache).query(&word).await)
-        .or_else(|_err| FromYoudict::new().query_and_store(&word, cache))
+            .or_else(|_err| FromYoudict::new().query_and_store(&word, cache))
     }
 
     pub fn is_empty(&self) -> bool {
@@ -52,7 +52,8 @@ impl FromYoudict {
     ) -> anyhow::Result<WordEntry> {
         futures::executor::block_on(async {
             let word_entry = self.query(&word).await?;
-            cache.store(&word, word_entry.clone())?;
+            let file = cache.store(&word, "bin")?;
+            bincode::serialize_into(file, &word_entry)?;    
             Ok(word_entry)
         })
     }
@@ -67,6 +68,8 @@ impl<'a> FromCache<'a> {
         Self { cache }
     }
     pub async fn query(&mut self, query_word: impl AsRef<str>) -> anyhow::Result<WordEntry> {
-        self.cache.query(query_word)
+        let file = self.cache.query(query_word, "bin")?;
+        let entry = bincode::deserialize_from(file)?;
+        Ok(entry)
     }
 }

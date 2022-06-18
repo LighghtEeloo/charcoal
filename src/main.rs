@@ -59,7 +59,8 @@ async fn edit_main(args: cli::EditArgs) -> anyhow::Result<()> {
 
 async fn clean_main() -> anyhow::Result<()> {
     let mut cache = AppBuilder::new().cache()?;
-    cache.clean()
+    let res = cache.clean()?;
+    Ok(res)
 }
 
 /* TODO
