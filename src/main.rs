@@ -65,8 +65,6 @@ async fn clean_main() -> anyhow::Result<()> {
 
 /* TODO
  * 4. Authority
- * 6. Better cache consistency with audio
- * 7. Cli
  * 8. en_us / zh_cn
- * 9. concise mode
+ * 9. concise mode in cli
  */

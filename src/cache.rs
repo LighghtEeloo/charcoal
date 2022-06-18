@@ -1,6 +1,6 @@
 use std::{
     collections::hash_map::DefaultHasher,
-    fs::{File, OpenOptions},
+    fs::{File, OpenOptions, self},
     hash::{Hash, Hasher},
     io,
     path::PathBuf,
@@ -26,23 +26,24 @@ impl CacheFile {
     fn generate(s: String) -> Self {
         let hash_num = CacheFile::str_hash(&s);
         if s.contains(" ") || !s.is_ascii() {
-            CacheFile::Normal((hash_num % 256) as u8, s)
-        } else {
             CacheFile::Absurd(hash_num)
+        } else {
+            CacheFile::Normal((hash_num % 256) as u8, s)
         }
     }
-    fn consume(self, cache: &Cache, suffix: &'static str) -> PathBuf {
+    fn consume(self, cache: &Cache, suffix: &'static str) -> io::Result<PathBuf> {
         match self {
             CacheFile::Normal(dir, file) => {
                 let mut path = cache.cache_dir.clone();
                 path.push(format!("{:02x}", dir));
+                fs::create_dir_all(&path)?;
                 path.push(format!("{}.{}", file, suffix));
-                path
+                Ok(path)
             }
             CacheFile::Absurd(file) => {
                 let mut path = cache.vault_dir.clone();
                 path.push(format!("{:x}.{}", file, suffix));
-                path
+                Ok(path)
             }
         }
     }
@@ -55,16 +56,16 @@ impl Cache {
             vault_dir,
         }
     }
-    fn get_file_path(&self, word: impl AsRef<str>, suffix: &'static str) -> PathBuf {
+    fn get_file_path(&self, word: impl AsRef<str>, suffix: &'static str) -> io::Result<PathBuf> {
         CacheFile::generate(word.as_ref().to_owned()).consume(&self, suffix)
     }
     pub fn query(&self, word: impl AsRef<str>, suffix: &'static str) -> io::Result<File> {
-        let path = self.get_file_path(&word, suffix);
+        let path = self.get_file_path(&word, suffix)?;
         let file = OpenOptions::new().read(true).open(path)?;
         Ok(file)
     }
     pub fn store(&self, word: impl AsRef<str>, suffix: &'static str) -> io::Result<File> {
-        let path = self.get_file_path(&word, suffix);
+        let path = self.get_file_path(&word, suffix)?;
         let file = OpenOptions::new().create(true).write(true).open(path)?;
         Ok(file)
     }
