@@ -125,4 +125,8 @@ impl Cache {
         }
         Ok(())
     }
+
+    pub fn clean(&mut self) -> anyhow::Result<()> {
+        todo!("cache cleaning not implemented")
+    }
 }

@@ -1,7 +1,7 @@
 use crate::{Cache, Config};
 use directories_next::ProjectDirs;
 use log::info;
-use std::fs;
+use std::{fs, io, path::PathBuf};
 
 pub struct AppDataBuilder {
     project_dirs: ProjectDirs,
@@ -24,26 +24,27 @@ impl AppDataBuilder {
 }
 
 impl AppDataBuilder {
+    fn config_path(&self) -> io::Result<PathBuf> {
+        let mut config_path = self.project_dirs.config_dir().to_owned();
+        fs::create_dir_all(&config_path)?;
+        config_path.push(self.config_file);
+        Ok(config_path)
+    }
     pub fn config(&self) -> anyhow::Result<Config> {
-        let config_path = {
-            let mut config_path = self.project_dirs.config_dir().to_owned();
-            fs::create_dir_all(&config_path)?;
-            config_path.push(self.config_file);
-            config_path
-        };
-
-        Config::of_file(config_path.clone()).map_or_else(
-            |_err| -> anyhow::Result<Config> {
-                info!(
-                    "Creating new configuration file at: \n\t{}",
-                    config_path.display()
-                );
-                let config = Config::new(config_path);
-                config.to_file()?;
-                Ok(config)
-            },
+        Config::of_file(self.config_path()?).map_or_else(
+            |_err| -> anyhow::Result<Config> { self.config_fresh() },
             |config| Ok(config),
         )
+    }
+    pub fn config_fresh(&self) -> anyhow::Result<Config> {
+        let config_path = self.config_path()?;
+        info!(
+            "Creating new configuration file at: \n\t{}",
+            config_path.display()
+        );
+        let config = Config::new(config_path);
+        config.to_file()?;
+        Ok(config)
     }
 
     pub fn cache(&self) -> anyhow::Result<Cache> {

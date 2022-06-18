@@ -17,11 +17,14 @@ impl Cli {
 #[derive(Subcommand, Debug)]
 pub enum Command {
     /// Query words from online or offline
-    #[clap(alias = "q")]
+    #[clap(aliases = &["q", "search", "s"])]
     Query(QueryArgs),
     /// Edit the configuration file
-    #[clap(alias = "e")]
-    Edit,
+    #[clap(aliases = &["e", "config"])]
+    Edit(EditArgs),
+    /// Clean cache
+    #[clap(aliases = &["c"])]
+    Clean,
 }
 
 #[derive(Args, Debug)]
@@ -32,6 +35,13 @@ pub struct QueryArgs {
     /// Whether to speak aloud
     #[clap(value_parser, short, long)]
     pub speak: Option<Toggle>,
+}
+
+#[derive(Args, Debug)]
+pub struct EditArgs {
+    /// A fresh start
+    #[clap(value_parser, long)]
+    pub reset: bool,
 }
 
 #[derive(Clone, Debug, ValueEnum)]

@@ -1,4 +1,4 @@
-use charcoal::{cli, AppDataBuilder, query, Cli, Command, Speech};
+use charcoal::{cli, query, AppDataBuilder, Cli, Command, Speech};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -6,7 +6,8 @@ async fn main() -> anyhow::Result<()> {
 
     match Cli::new() {
         Command::Query(args) => query_main(args).await,
-        Command::Edit => edit_main().await,
+        Command::Edit(args) => edit_main(args).await,
+        Command::Clean => clean_main().await,
     }
 }
 
@@ -46,18 +47,33 @@ async fn query_main(args: cli::QueryArgs) -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn edit_main() -> anyhow::Result<()> {
-    let editor = std::env!("EDITOR");
-    let config_path = AppDataBuilder::new().config()?.path;
+async fn edit_main(args: cli::EditArgs) -> anyhow::Result<()> {
+    use std::process::Command;
 
-    let mut child = std::process::Command::new(editor).args([config_path]).spawn()?;
+    let editor = std::env!("EDITOR");
+    let config_path = {
+        let app_data_builder = AppDataBuilder::new();
+        if args.reset {
+            app_data_builder.config_fresh()?
+        } else {
+            app_data_builder.config()?
+        }
+        .path
+    };
+
+    let mut child = Command::new(editor).args([config_path]).spawn()?;
     child.wait()?;
     Ok(())
 }
 
+async fn clean_main() -> anyhow::Result<()> {
+    let mut cache = AppDataBuilder::new().cache()?;
+    cache.clean()
+}
+
 /* TODO
- * 1. Config & Cli
  * 4. Authority
  * 5. Better audio
  * 6. Better cache consistency with audio
+ * 7. Cli
  */
