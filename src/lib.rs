@@ -14,7 +14,7 @@ pub mod select;
 pub mod speech;
 pub mod word;
 
-pub use builder::AppDataBuilder;
+pub use builder::AppBuilder;
 pub use cache::Cache;
 pub use cli::{Cli, Command};
 pub use config::Config;

@@ -3,14 +3,14 @@ use directories_next::ProjectDirs;
 use log::info;
 use std::{fs, io, path::PathBuf};
 
-pub struct AppDataBuilder {
+pub struct AppBuilder {
     project_dirs: ProjectDirs,
     config_file: &'static str,
     cache_file: &'static str,
     cache_dir: &'static str,
 }
 
-impl AppDataBuilder {
+impl AppBuilder {
     pub fn new() -> Self {
         let project_dirs = ProjectDirs::from("", "LitiaEeloo", "Charcoal")
             .expect("No valid config directory fomulated");
@@ -23,7 +23,7 @@ impl AppDataBuilder {
     }
 }
 
-impl AppDataBuilder {
+impl AppBuilder {
     fn config_path(&self) -> io::Result<PathBuf> {
         let mut config_path = self.project_dirs.config_dir().to_owned();
         fs::create_dir_all(&config_path)?;

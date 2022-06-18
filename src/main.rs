@@ -1,4 +1,4 @@
-use charcoal::{cli, query, AppDataBuilder, Cli, Command, Speech};
+use charcoal::{cli, query, AppBuilder, Cli, Command, Speech};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -12,10 +12,10 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn query_main(args: cli::QueryArgs) -> anyhow::Result<()> {
-    let app_data_builder = AppDataBuilder::new();
+    let app_builder = AppBuilder::new();
 
-    let mut config = app_data_builder.config()?;
-    let mut cache = app_data_builder.cache()?;
+    let mut config = app_builder.config()?;
+    let mut cache = app_builder.cache()?;
 
     if let Some(speak) = args.speak {
         speak.twitch(&mut config.speak)
@@ -52,11 +52,11 @@ async fn edit_main(args: cli::EditArgs) -> anyhow::Result<()> {
 
     let editor = std::env!("EDITOR");
     let config_path = {
-        let app_data_builder = AppDataBuilder::new();
+        let app_builder = AppBuilder::new();
         if args.reset {
-            app_data_builder.config_fresh()?
+            app_builder.config_fresh()?
         } else {
-            app_data_builder.config()?
+            app_builder.config()?
         }
         .path
     };
@@ -67,7 +67,7 @@ async fn edit_main(args: cli::EditArgs) -> anyhow::Result<()> {
 }
 
 async fn clean_main() -> anyhow::Result<()> {
-    let mut cache = AppDataBuilder::new().cache()?;
+    let mut cache = AppBuilder::new().cache()?;
     cache.clean()
 }
 
