@@ -17,10 +17,8 @@ async fn query_main(args: cli::QueryArgs) -> anyhow::Result<()> {
     let mut config = app_builder.config()?;
     let cache = app_builder.cache()?;
 
-    let word = args.query;
-    if let Some(speak) = args.speak {
-        speak.twitch(&mut config.speak)
-    }
+    let word = args.query.to_owned();
+    config.apply(args);
 
     let word_speech = Speech::query(&word, &cache, config.speak);
     let word_query = WordEntry::query(&cache, &word).await?;

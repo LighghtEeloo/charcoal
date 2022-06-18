@@ -35,6 +35,9 @@ pub struct QueryArgs {
     /// Whether to speak aloud
     #[clap(value_parser, short, long)]
     pub speak: Option<Toggle>,
+    /// Whether to be concise
+    #[clap(value_parser, short, long)]
+    pub concise: Option<Toggle>,
 }
 
 #[derive(Args, Debug)]
@@ -55,10 +58,17 @@ pub enum Toggle {
 }
 
 impl Toggle {
-    pub fn twitch(self, b: &mut bool) {
+    pub fn twitch(&self, b: &mut bool) {
         match self {
             Toggle::Y => *b = true,
             Toggle::N => *b = false,
+            Toggle::T => *b = !*b,
+        }
+    }
+    pub fn counter_twitch(&self, b: &mut bool) {
+        match self {
+            Toggle::Y => *b = false,
+            Toggle::N => *b = true,
             Toggle::T => *b = !*b,
         }
     }

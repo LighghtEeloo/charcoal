@@ -53,7 +53,7 @@ impl FromYoudict {
         futures::executor::block_on(async {
             let word_entry = self.query(&word).await?;
             let file = cache.store(&word, "bin")?;
-            bincode::serialize_into(file, &word_entry)?;    
+            bincode::serialize_into(file, &word_entry)?;
             Ok(word_entry)
         })
     }

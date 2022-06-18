@@ -36,7 +36,7 @@ impl AppBuilder {
     pub fn config_fresh(&self) -> anyhow::Result<Config> {
         let config_path = self.config_path()?;
         log::info!(
-            "Creating new configuration file at: \n\t{}",
+            "Creating fresh configuration file at: \n\t{}",
             config_path.display()
         );
         let config = Config::new(config_path);
