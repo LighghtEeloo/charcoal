@@ -14,16 +14,32 @@ cargo build --all
 
 As the crate becomes stable, publishing via cargo, AUR and other major package managers will be available as an option.
 
-## Dependency
+
+### Small Tips Ahead
+
+Aliasing common command to `chr` or anything shorter is recommended (`cc` if you don't mind?)
+
+```sh
+alias chr="char-coal query -s"
+```
+
+For debug:
+
+```sh
+cd charcoal
+cargo build --all
+alias chr="RUST_LOG=info target/debug/char-coal query -s"
+```
 
 No manually designated dependencies are required. See `Cargo.toml` if you are interested in the crates charcoal is using.
+
 
 ## Usage
 
 ### Query
 
 ```sh
-charcoal query <QUERY>
+char-coal query <QUERY>
 ```
 
 where query can be shortened as `q`, `search`, or `s`.
@@ -35,7 +51,7 @@ With `-s` or `--speak-as true` one can force the happening of a speech.
 You may want to edit the configuration file in an easy way. Charcoal gets you covered:
 
 ```sh
-charcoal edit
+char-coal edit
 ```
 
 And with `--reset` it will generate a brand new configuration in case anything gets wrong.
@@ -47,7 +63,7 @@ For more details on configuration file, see *Configuration* section.
 Charcoal caches up your queries, both text and audio. While it's nice for repetitive queries, it takes up some space. If you want, you can clean them with:
 
 ```sh
-charcoal clean
+char-coal clean
 ```
 
 For more details on cache, see *Caching Strategy* section.
@@ -57,32 +73,17 @@ For more details on cache, see *Caching Strategy* section.
 To see more options, run
 
 ```sh
-charcoal help
+char-coal help
 ```
 
 for help on subcommands, or
 
 ```sh
-charcoal query --help
+char-coal query --help
 ```
 
 for each subcommand, say, `query`.
 
-### Tip
-
-Aliasing `charcoal query -s` to `chr` or anything shorter is recommended (`cc` if you don't mind?)
-
-```sh
-alias chr="charcoal query -s"
-```
-
-For debug:
-
-```sh
-cd charcoal
-cargo build --all
-alias chr="RUST_LOG=info target/debug/charcoal query -s"
-```
 
 ## Configuration
 

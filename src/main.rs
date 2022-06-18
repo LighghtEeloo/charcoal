@@ -1,4 +1,4 @@
-use charcoal::{cli, AppBuilder, Cli, Command, Speech, WordEntry};
+use char_coal::{cli, AppBuilder, Cli, Command, Speech, WordEntry};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
