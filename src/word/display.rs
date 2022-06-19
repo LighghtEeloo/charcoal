@@ -1,12 +1,11 @@
-use crate::{Config, WordEntry};
+use crate::{Config, WordEntry, WordQuery};
 use colored::Colorize;
-use whatlang::Lang;
 
 impl WordEntry {
-    pub fn display(&self, word: impl AsRef<str>, _lang: &Lang, config: &Config) {
+    pub fn display(&self, word_query: &WordQuery, config: &Config) {
         let normal = &config.normal;
 
-        print!("{}\n", word.as_ref().bright_red());
+        print!("{}\n", word_query.word().bright_red());
 
         if normal.with_pronunciation && !self.pronunciation.is_empty() {
             for (accent, pron) in self.pronunciation.iter() {

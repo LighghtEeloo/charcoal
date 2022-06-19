@@ -15,27 +15,24 @@ pub async fn main() -> anyhow::Result<()> {
     }
 }
 
-async fn query_main(args: cli::QueryArgs) -> anyhow::Result<()> {
+async fn query_main(mut args: cli::QueryArgs) -> anyhow::Result<()> {
     let app_builder = AppBuilder::new();
 
     let mut config = app_builder.config()?;
     let cache = app_builder.cache()?;
 
-    let word = args.query.to_owned();
-    config.apply(args);
-
-    let lang = whatlang::detect(word.as_ref())
-        .expect("Language detection failed.")
-        .lang();
-    let word_speech = Speech::query(&word, &lang, &cache, config.speak);
-    let word_entry = WordEntry::query(&word, &lang, &cache).await?;
+    config.apply(&mut args);
+    
+    let word_query = WordQuery::new(args.query.to_owned());
+    let word_speech = Speech::query(&word_query, &cache, config.speak);
+    let word_entry = WordEntry::query(&word_query, &cache).await?;
 
     if word_entry.is_empty() {
         println!("Word not found.");
         return Ok(());
     }
 
-    word_entry.display(&word, &lang, &config);
+    word_entry.display(&word_query, &config);
     if let Err(err) = word_speech.await {
         log::error!("An error occured in speech module: {:?}.", err)
     }

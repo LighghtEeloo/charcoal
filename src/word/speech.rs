@@ -1,40 +1,41 @@
-use crate::Cache;
+use crate::{Cache, WordQuery};
 use rodio::{Decoder, OutputStream, Sink};
 use std::{
     fs::File,
     io::{BufReader, Write},
 };
-use whatlang::Lang;
 
 pub struct Speech;
 
 impl Speech {
     pub async fn query(
-        word: impl AsRef<str>, lang: &Lang, cache: &Cache, is_speak: bool,
+        word_query: &WordQuery, cache: &Cache, is_speak: bool,
     ) -> anyhow::Result<()> {
         if is_speak {
-            let file = Speech::store(word, lang, cache).await?;
+            let file = Speech::store(word_query, cache).await?;
             Speech::speak(file).await
         } else {
             Ok(())
         }
     }
 
-    fn url(word: impl AsRef<str>, lang: &Lang) -> String {
-        let code = match lang {
-            Lang::Cmn | Lang::Jpn => "zh_cn",
-            _ => "en",
+    fn url(word_query: &WordQuery) -> String {
+        let code = if word_query.is_western() {
+            "en"
+        } else {
+            "zh_cn"
         };
         format!(
             "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl={}&q={}",
             code,
-            word.as_ref()
+            word_query.word()
         )
     }
 
-    async fn store(word: impl AsRef<str>, lang: &Lang, cache: &Cache) -> anyhow::Result<File> {
-        let file = (cache.query(&word, "mp3")).or_else(|_| -> anyhow::Result<File> {
-            let url = Speech::url(&word, lang);
+    async fn store(word_query: &WordQuery, cache: &Cache) -> anyhow::Result<File> {
+        let word = word_query.word();
+        let file = (cache.query(word, "mp3")).or_else(|_| -> anyhow::Result<File> {
+            let url = Speech::url(&word_query);
             futures::executor::block_on(async {
                 // request
                 let res = reqwest::get(url).await?;

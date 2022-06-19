@@ -49,21 +49,21 @@ impl Config {
         fs::write(&self.path, s)?;
         Ok(())
     }
-    pub fn apply(&mut self, mut args: QueryArgs) {
+    pub fn apply(&mut self, args: &mut QueryArgs) {
         if args.speak {
             args.speak_as = Some(Toggle::True);
         }
         if args.mute {
             args.speak_as = Some(Toggle::False);
         }
-        if let Some(speak_as) = args.speak_as {
+        if let Some(speak_as) = &args.speak_as {
             speak_as.twitch(&mut self.speak);
         }
 
         if args.concise {
             args.concise_as = Some(Toggle::True);
         }
-        if let Some(concise_as) = args.concise_as {
+        if let Some(concise_as) = &args.concise_as {
             concise_as.counter_twitch(&mut self.normal.with_sentence);
             concise_as.counter_twitch(&mut self.normal.with_variants);
         }
