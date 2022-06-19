@@ -2,7 +2,8 @@ pub mod display;
 pub mod select;
 pub mod speech;
 
-use crate::{Cache, Select};
+use self::select::Select;
+use crate::Cache;
 use serde::{Deserialize, Serialize};
 use whatlang::Lang;
 

@@ -1,6 +1,6 @@
 use std::{
     collections::hash_map::DefaultHasher,
-    fs::{File, OpenOptions, self},
+    fs::{self, File, OpenOptions},
     hash::{Hash, Hasher},
     io,
     path::PathBuf,

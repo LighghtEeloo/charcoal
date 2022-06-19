@@ -36,7 +36,7 @@ pub struct QueryArgs {
     #[clap(value_parser, short, long)]
     pub speak: bool,
     /// Mute (overloads speak)
-    #[clap(value_parser, short='q', long)]
+    #[clap(value_parser, short = 'q', long)]
     pub mute: bool,
     /// Whether to speak aloud
     #[clap(value_parser, long)]

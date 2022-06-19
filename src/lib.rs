@@ -9,6 +9,5 @@ pub use app::builder::AppBuilder;
 pub use app::cache::Cache;
 pub use app::cli::{Cli, Command};
 pub use app::config::Config;
-pub use word::WordEntry;
-pub use word::select::Select;
 pub use word::speech::Speech;
+pub use word::WordEntry;
