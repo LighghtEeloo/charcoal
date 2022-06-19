@@ -23,10 +23,7 @@ impl<'a> WordQuery {
         &self.word
     }
     pub fn is_western(&self) -> bool {
-        match self.lang {
-            Lang::Cmn | Lang::Jpn => false,
-            _ => true,
-        }
+        !matches!(self.lang, Lang::Cmn | Lang::Jpn)
     }
 }
 
@@ -71,7 +68,7 @@ impl FromYoudict {
             Ok(word_entry)
         })
     }
-    pub async fn query(&mut self,word_query: &WordQuery) -> anyhow::Result<WordEntry> {
+    pub async fn query(&mut self, word_query: &WordQuery) -> anyhow::Result<WordEntry> {
         async fn get_html(url: impl AsRef<str> + reqwest::IntoUrl) -> anyhow::Result<String> {
             let body = reqwest::get(url).await?.text().await?;
             Ok(body)
@@ -84,7 +81,7 @@ impl FromYoudict {
         let xml = get_html(youdao_dict_url).await?;
         let doc = scraper::Html::parse_document(&xml);
 
-        FromYoudict::select(doc.root_element(), &word_query.lang)
+        FromYoudict::select(doc.root_element(), word_query)
     }
 }
 

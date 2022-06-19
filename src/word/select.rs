@@ -2,19 +2,18 @@ mod authority;
 mod sentence;
 
 use self::sentence::Sentence;
-use super::{FromYoudict, WordEntry};
+use super::{FromYoudict, WordEntry, WordQuery};
 use scraper::{ElementRef, Selector};
-use whatlang::Lang;
 
 pub trait Select {
     type Target;
-    fn select(elem: ElementRef, lang: &Lang) -> anyhow::Result<Self::Target>;
+    fn select(elem: ElementRef, word_query: &WordQuery) -> anyhow::Result<Self::Target>;
 }
 
 impl Select for FromYoudict {
     type Target = WordEntry;
 
-    fn select(elem: ElementRef, lang: &Lang) -> anyhow::Result<Self::Target> {
+    fn select(elem: ElementRef, word_query: &WordQuery) -> anyhow::Result<Self::Target> {
         let doc = elem;
         let pronunciation = {
             let sel = Selector::parse("span.pronounce").unwrap();
@@ -58,7 +57,7 @@ impl Select for FromYoudict {
                 .collect()
         };
 
-        let sentence = Sentence::select(elem, lang)?;
+        let sentence = Sentence::select(elem, word_query)?;
 
         Ok(WordEntry {
             pronunciation,

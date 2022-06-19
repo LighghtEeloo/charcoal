@@ -22,7 +22,7 @@ async fn query_main(mut args: cli::QueryArgs) -> anyhow::Result<()> {
     let cache = app_builder.cache()?;
 
     config.apply(&mut args);
-    
+
     let word_query = WordQuery::new(args.query.to_owned());
     let word_speech = Speech::query(&word_query, &cache, config.speak);
     let word_entry = WordEntry::query(&word_query, &cache).await?;
