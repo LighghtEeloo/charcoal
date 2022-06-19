@@ -31,7 +31,7 @@ pub enum Command {
 pub struct QueryArgs {
     /// The word to be queried
     #[clap(value_parser)]
-    pub query: String,
+    pub query: Vec<String>,
     /// Speak aloud
     #[clap(value_parser, short, long)]
     pub speak: bool,
@@ -47,6 +47,12 @@ pub struct QueryArgs {
     /// Whether to be concise
     #[clap(value_parser, long)]
     pub concise_as: Option<Toggle>,
+}
+
+impl QueryArgs {
+    pub fn query(&self) -> String {
+        self.query.join(" ")
+    }
 }
 
 #[derive(Args, Debug)]
