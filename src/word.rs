@@ -14,9 +14,7 @@ pub struct WordQuery {
 
 impl<'a> WordQuery {
     pub fn new(word: String) -> Self {
-        let lang = whatlang::detect(&word)
-            .expect("Language detection failed.")
-            .lang();
+        let lang = whatlang::detect(&word).map_or(Lang::Eng, |info| info.lang());
         Self { word, lang }
     }
     pub fn word(&'a self) -> &'a str {
