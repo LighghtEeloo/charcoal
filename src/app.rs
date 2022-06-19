@@ -31,6 +31,7 @@ async fn query_main(mut args: cli::QueryArgs) -> anyhow::Result<()> {
         }
         word_query.unwrap()
     };
+
     let word_speech = Speech::query(&word_query, &cache, config.speak);
     let word_entry = WordEntry::query(&word_query, &cache).await?;
 
@@ -51,7 +52,7 @@ async fn edit_main(args: cli::EditArgs) -> anyhow::Result<()> {
     use std::process::Command;
 
     let editor = std::env::var("EDITOR").or_else(|err| {
-        println!("Please set $EDITOR to your prefered editor.");
+        println!("Please set $EDITOR to your preferred editor.");
         Err(err)
     })?;
     let config_path = {
