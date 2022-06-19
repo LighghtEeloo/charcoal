@@ -4,16 +4,25 @@ An alternative to wudao-dict. With colorized output and optional speech.
 
 ## Installation
 
-Just as usual for normal developing Rust crates:
+Brew:
+
+```sh
+brew install lighghteeloo/charcoal/charcoal
+```
+
+Build from source:
+
+```sh
+cargo install char-coal
+```
+
+Clone and build from source:
 
 ```sh
 git clone git@github.com:LighghtEeloo/Charcoal.git
 cd Charcoal
 cargo build --all
 ```
-
-As the crate becomes stable, publishing via cargo, AUR and other major package managers will be available as an option.
-
 
 ### Small Tips Ahead
 
