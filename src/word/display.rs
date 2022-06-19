@@ -1,13 +1,14 @@
 use crate::{Config, WordEntry};
 use colored::Colorize;
+use whatlang::Lang;
 
 impl WordEntry {
-    pub fn display(&self, word: impl AsRef<str>, config: &Config) {
+    pub fn display(&self, word: impl AsRef<str>, _lang: &Lang, config: &Config) {
         let normal = &config.normal;
 
         print!("{}\n", word.as_ref().bright_red());
 
-        if normal.with_pronunciation {
+        if normal.with_pronunciation && !self.pronunciation.is_empty() {
             for (accent, pron) in self.pronunciation.iter() {
                 print!("{} {}\t", accent, pron.cyan())
             }
@@ -15,12 +16,12 @@ impl WordEntry {
         }
 
         for line in self.brief.iter() {
-            print!("{}\n", line.bright_blue())
+            println!("{}", line.bright_blue())
         }
 
         if normal.with_variants {
             for line in self.variants.iter() {
-                print!("{}\n", line.bright_black())
+                println!("{}", line.bright_black())
             }
         }
 

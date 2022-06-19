@@ -28,14 +28,14 @@ async fn query_main(args: cli::QueryArgs) -> anyhow::Result<()> {
         .expect("Language detection failed.")
         .lang();
     let word_speech = Speech::query(&word, &lang, &cache, config.speak);
-    let word_query = WordEntry::query(&word, &lang, &cache).await?;
+    let word_entry = WordEntry::query(&word, &lang, &cache).await?;
 
-    if word_query.is_empty() {
+    if word_entry.is_empty() {
         println!("Word not found.");
         return Ok(());
     }
 
-    word_query.display(&word, &config);
+    word_entry.display(&word, &lang, &config);
     if let Err(err) = word_speech.await {
         log::error!("An error occured in speech module: {:?}.", err)
     }

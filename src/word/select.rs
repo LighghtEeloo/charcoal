@@ -54,6 +54,7 @@ impl Select for FromYoudict {
                     })
                 })
                 .flatten()
+                .filter(|s| !s.is_empty())
                 .collect()
         };
 
