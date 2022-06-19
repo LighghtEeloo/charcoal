@@ -53,6 +53,9 @@ impl Config {
         if args.speak {
             args.speak_as = Some(Toggle::True);
         }
+        if args.mute {
+            args.speak_as = Some(Toggle::False);
+        }
         if let Some(speak_as) = args.speak_as {
             speak_as.twitch(&mut self.speak);
         }
