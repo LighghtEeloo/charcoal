@@ -13,9 +13,12 @@ pub struct WordQuery {
 }
 
 impl<'a> WordQuery {
-    pub fn new(word: String) -> Self {
+    pub fn new(word: String) -> Option<Self> {
+        if word.is_empty() {
+            return None;
+        }
         let lang = whatlang::detect(&word).map_or(Lang::Eng, |info| info.lang());
-        Self { word, lang }
+        Some(Self { word, lang })
     }
     pub fn word(&'a self) -> &'a str {
         &self.word
