@@ -46,7 +46,10 @@ async fn query_main(args: cli::QueryArgs) -> anyhow::Result<()> {
 async fn edit_main(args: cli::EditArgs) -> anyhow::Result<()> {
     use std::process::Command;
 
-    let editor = std::env!("EDITOR");
+    let editor = std::env::var("EDITOR").or_else(|err| {
+        println!("Please set $EDITOR to your prefered editor.");
+        Err(err)
+    })?;
     let config_path = {
         let app_builder = AppBuilder::new();
         if args.reset {
