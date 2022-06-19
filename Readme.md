@@ -4,6 +4,12 @@ An alternative to wudao-dict. With colorized output and optional speech.
 
 ## Installation
 
+Arch (-ish):
+
+```sh
+yay -S charcoal
+```
+
 Brew:
 
 ```sh
@@ -16,28 +22,12 @@ Build from source:
 cargo install char-coal
 ```
 
-Clone and build from source:
-
-```sh
-git clone git@github.com:LighghtEeloo/Charcoal.git
-cd Charcoal
-cargo build --all
-```
-
 ### Small Tips Ahead
 
 Aliasing common command to `chr`, `wd` or anything shorter is recommended (`cc` if you don't mind?)
 
 ```sh
 alias chr="char-coal query -s"
-```
-
-For debug:
-
-```sh
-cd Charcoal
-cargo build --all
-alias chr="RUST_LOG=info target/debug/char-coal query -s"
 ```
 
 No manually designated dependencies are required. See `Cargo.toml` if you are interested in the crates charcoal is using.
@@ -97,6 +87,24 @@ for each subcommand, say, `query`.
 ## Configuration
 
 Configurations are straight forward. Just change the booleans and they're yours.
+
+## Dev
+
+Clone and build from source:
+
+```sh
+git clone git@github.com:LighghtEeloo/Charcoal.git
+cd Charcoal
+cargo build --all
+```
+
+Alias:
+
+```sh
+cd Charcoal
+cargo build --all
+alias chr="RUST_LOG=info target/debug/char-coal query -s"
+```
 
 ## Caching Strategy
 
