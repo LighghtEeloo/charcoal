@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.3
+- Impl. Multi word query.
+
 ## 0.1.2
 - Fix. Static `env!` replaced by dynamic `env::var`.
 
