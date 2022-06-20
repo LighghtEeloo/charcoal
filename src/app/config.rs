@@ -36,7 +36,7 @@ impl Config {
                 with_variants: true,
                 with_sentence: true,
             },
-            speak: true,
+            speak: false,
         }
     }
     pub fn of_file(path: PathBuf) -> io::Result<Self> {
