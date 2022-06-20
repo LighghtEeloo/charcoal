@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
 /// A command line dictionary
@@ -5,26 +7,29 @@ use clap::{Args, Parser, Subcommand, ValueEnum};
 #[clap(version, about)]
 pub struct Cli {
     #[clap(subcommand)]
-    pub command: Command,
+    pub commands: Commands,
 }
 
 impl Cli {
-    pub fn new() -> Command {
-        Self::parse().command
+    pub fn new() -> Commands {
+        Self::parse().commands
     }
 }
 
 #[derive(Subcommand, Debug)]
-pub enum Command {
+pub enum Commands {
     /// Query words from online or offline
     #[clap(aliases = &["q", "search", "s"])]
     Query(QueryArgs),
     /// Edit the configuration file
     #[clap(aliases = &["e", "config"])]
     Edit(EditArgs),
-    /// Clean cache
+    /// Cache commands
     #[clap(aliases = &["c"])]
-    Clean,
+    Cache {
+        #[clap(subcommand)]
+        commands: CacheCmds,
+    },
 }
 
 #[derive(Args, Debug)]
@@ -60,6 +65,28 @@ pub struct EditArgs {
     /// A fresh start
     #[clap(value_parser, long)]
     pub reset: bool,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum CacheCmds {
+    /// Show cache location
+    #[clap(aliases = &["ls"])]
+    Show,
+    /// Clean cache
+    #[clap(aliases = &["destroy"])]
+    Clean,
+    /// Import
+    #[clap(aliases = &["in"])]
+    Import {
+        #[clap(value_parser)]
+        dir: PathBuf,
+    },
+    /// Export
+    #[clap(aliases = &["out"])]
+    Export {
+        #[clap(value_parser)]
+        dir: PathBuf,
+    },
 }
 
 #[derive(Clone, Debug, ValueEnum)]

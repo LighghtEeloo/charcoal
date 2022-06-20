@@ -56,18 +56,25 @@ impl Cache {
             vault_dir,
         }
     }
+
     fn get_file_path(&self, word: impl AsRef<str>, suffix: &'static str) -> io::Result<PathBuf> {
         CacheFile::generate(word.as_ref().to_owned()).consume(&self, suffix)
     }
+
     pub fn query(&self, word: impl AsRef<str>, suffix: &'static str) -> io::Result<File> {
         let path = self.get_file_path(&word, suffix)?;
         let file = OpenOptions::new().read(true).open(path)?;
         Ok(file)
     }
+
     pub fn store(&self, word: impl AsRef<str>, suffix: &'static str) -> io::Result<File> {
         let path = self.get_file_path(&word, suffix)?;
         let file = OpenOptions::new().create(true).write(true).open(path)?;
         Ok(file)
+    }
+
+    pub fn show(&self) -> &PathBuf {
+        &self.cache_dir
     }
 
     pub fn clean(&self) -> io::Result<()> {
@@ -75,5 +82,20 @@ impl Cache {
         fs::remove_dir_all(&self.vault_dir)?;
 
         Ok(())
+    }
+
+    pub fn import(&self, _dir: PathBuf) -> io::Result<()> {
+        todo!("Import not implemented")
+    }
+
+    pub fn export(&self, dir: PathBuf) -> io::Result<()> {
+        if !dir.exists() {
+            fs::create_dir_all(&dir)?
+        }
+        if fs::read_dir(dir)?.count() != 0 {
+            println!("Target dir not empty");
+            return Ok(());
+        }
+        todo!("Export not implemented")
     }
 }

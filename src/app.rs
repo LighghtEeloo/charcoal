@@ -9,9 +9,9 @@ pub async fn main() -> anyhow::Result<()> {
     env_logger::init();
 
     match Cli::new() {
-        Command::Query(args) => query_main(args).await,
-        Command::Edit(args) => edit_main(args).await,
-        Command::Clean => clean_main().await,
+        Commands::Query(args) => query_main(args).await,
+        Commands::Edit(args) => edit_main(args).await,
+        Commands::Cache { commands } => cache_main(commands).await,
     }
 }
 
@@ -25,11 +25,12 @@ async fn query_main(mut args: cli::QueryArgs) -> anyhow::Result<()> {
 
     let word_query = {
         let word_query = WordQuery::new(args.query());
-        if word_query.is_none() {
+        if let Some(word_query) = word_query {
+            word_query
+        } else {
             println!("Invalid input.");
             return Ok(());
         }
-        word_query.unwrap()
     };
 
     let word_speech = Speech::query(&word_query, &cache, config.speak);
@@ -70,8 +71,23 @@ async fn edit_main(args: cli::EditArgs) -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn clean_main() -> anyhow::Result<()> {
+async fn cache_main(cmds: cli::CacheCmds) -> anyhow::Result<()> {
     let cache = AppBuilder::new().cache()?;
-    let res = cache.clean()?;
-    Ok(res)
+    match cmds {
+        cli::CacheCmds::Show => {
+            println!("{}", cache.show().display());
+        }
+        cli::CacheCmds::Clean => {
+            cache.clean()?;
+        }
+        cli::CacheCmds::Import { dir } => {
+            log::info!("Importing:\n\t<== {}", dir.display());
+            cache.import(dir)?;
+        }
+        cli::CacheCmds::Export { dir } => {
+            log::info!("Exporting:\n\t==> {}", dir.display());
+            cache.export(dir)?;
+        }
+    }
+    Ok(())
 }
