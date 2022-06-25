@@ -7,6 +7,7 @@ pub struct AppBuilder {
     config_file: &'static str,
     cache_dir: &'static str,
     vault_dir: &'static str,
+    tmp_dir: &'static str,
 }
 
 impl AppBuilder {
@@ -18,6 +19,7 @@ impl AppBuilder {
             config_file: "config.toml",
             cache_dir: "cache",
             vault_dir: "vault",
+            tmp_dir: "tmp",
         }
     }
 }
@@ -53,8 +55,9 @@ impl AppBuilder {
         };
         let cache_dir = ensure(self.cache_dir)?;
         let vault_dir = ensure(self.vault_dir)?;
+        let tmp_dir = ensure(self.tmp_dir)?;
 
-        let cache = Cache::new(cache_dir, vault_dir);
+        let cache = Cache::new(cache_dir, vault_dir, tmp_dir);
         Ok(cache)
     }
 }

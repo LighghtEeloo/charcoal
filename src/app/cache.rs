@@ -3,13 +3,14 @@ use std::{
     fs::{self, File, OpenOptions},
     hash::{Hash, Hasher},
     io,
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 #[derive(Clone)]
 pub struct Cache {
     cache_dir: PathBuf,
     vault_dir: PathBuf,
+    tmp_dir: PathBuf,
 }
 
 enum CacheFile {
@@ -50,10 +51,11 @@ impl CacheFile {
 }
 
 impl Cache {
-    pub fn new(cache_dir: PathBuf, vault_dir: PathBuf) -> Self {
+    pub fn new(cache_dir: PathBuf, vault_dir: PathBuf, tmp_dir: PathBuf) -> Self {
         Self {
             cache_dir,
             vault_dir,
+            tmp_dir,
         }
     }
 
@@ -84,18 +86,85 @@ impl Cache {
         Ok(())
     }
 
-    pub fn import(&self, _dir: PathBuf) -> io::Result<()> {
-        todo!("Import not implemented")
+    fn tilde_expand(dir: impl AsRef<Path>) -> io::Result<PathBuf> {
+        let mut path = (dir.as_ref().into_iter().take(1))
+            .map(|s| -> io::Result<_> {
+                if s == "~" {
+                    Ok(directories_next::UserDirs::new()
+                        .ok_or(io::Error::from(io::ErrorKind::Unsupported))?
+                        .home_dir()
+                        .to_path_buf())
+                } else {
+                    Ok(PathBuf::from(s))
+                }
+            })
+            .collect::<io::Result<PathBuf>>()?;
+        for s in dir.as_ref().into_iter().skip(1) {
+            path.push(s)
+        }
+        Ok(path)
+    }
+
+    fn ensure_dir(dir: &PathBuf) -> io::Result<()> {
+        if (dir.parent())
+            .map(|p| if p.exists() { Some(()) } else { None })
+            .flatten()
+            .is_none()
+        {
+            println!("Parent dir of target not exist.");
+            Err(io::Error::from(io::ErrorKind::NotFound))?
+        }
+        Ok(())
+    }
+
+    pub fn import(&self, dir: PathBuf) -> io::Result<()> {
+        fs::remove_dir_all(&self.tmp_dir)?;
+        fs::create_dir_all(&self.tmp_dir)?;
+
+        let dir = Self::tilde_expand(dir)?;
+        Self::ensure_dir(&dir)?;
+        if !dir.exists() {
+            println!("Target doesn't exist.")
+        }
+        let i_file = File::open(dir)?;
+        let mut archive = tar::Archive::new(i_file);
+        archive.unpack(&self.tmp_dir)?;
+
+        for direntry in fs::read_dir(&self.tmp_dir)? {
+            let _file_name = direntry?
+                .file_name()
+                .to_str()
+                .ok_or(io::Error::from(io::ErrorKind::InvalidInput));
+            // if file_name.
+        }
+        todo!("import is not done")
+        // Ok(())
     }
 
     pub fn export(&self, dir: PathBuf) -> io::Result<()> {
-        if !dir.exists() {
-            fs::create_dir_all(&dir)?
+        let dir = Self::tilde_expand(dir)?;
+        Self::ensure_dir(&dir)?;
+        if dir.exists() {
+            println!("Target exists.")
         }
-        if fs::read_dir(dir)?.count() != 0 {
-            println!("Target dir not empty");
-            return Ok(());
-        }
-        todo!("Export not implemented")
+        let o_file = File::create(dir)?;
+        let mut builder = tar::Builder::new(o_file);
+        (self.cache_dir.read_dir()?)
+            .flat_map(|sub| -> io::Result<_> {
+                let iter = sub?.path().read_dir()?;
+                Ok(iter)
+            })
+            .flatten()
+            .flat_map(|file| -> io::Result<_> {
+                let p = file?.path();
+                Ok(p)
+            })
+            .try_for_each(|path| -> io::Result<_> {
+                builder.append_path_with_name(&path, path.file_name().unwrap())?;
+                Ok(())
+            })?;
+        builder.finish()?;
+        directories_next::UserDirs::new().unwrap().home_dir();
+        Ok(())
     }
 }
