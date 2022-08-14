@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.0
+- Impl. Cache system interaction.
+
 ## 0.1.3
 - Impl. Multi word query.
 
