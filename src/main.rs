@@ -1,6 +1,6 @@
-use char_coal::app;
+use char_coal::App;
 
 #[tokio::main]
 pub async fn main() -> anyhow::Result<()> {
-    app::main().await
+    App::main().await
 }

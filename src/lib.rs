@@ -5,6 +5,7 @@
 pub mod app;
 pub mod word;
 
+pub use app::App;
 pub use app::builder::AppBuilder;
 pub use app::cache::Cache;
 pub use app::cli::{Cli, Commands};
