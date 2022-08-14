@@ -123,22 +123,39 @@ impl Cache {
 
         let dir = Self::tilde_expand(dir)?;
         Self::ensure_dir(&dir)?;
-        if !dir.exists() {
-            println!("Target doesn't exist.")
-        }
+
         let i_file = File::open(dir)?;
         let mut archive = tar::Archive::new(i_file);
         archive.unpack(&self.tmp_dir)?;
 
         for direntry in fs::read_dir(&self.tmp_dir)? {
-            let _file_name = direntry?
-                .file_name()
-                .to_str()
-                .ok_or(io::Error::from(io::ErrorKind::InvalidInput));
-            // if file_name.
+            let direntry = direntry?;
+            let src = direntry.path();
+
+            let (src_name, src_suffix) = {
+                fn split_file_at_dot(file: String) -> Result<(String, String), io::Error> {
+                    if let Some((a, b)) = file.rsplit_once('.') {
+                        Ok((a.to_owned(), b.to_owned()))
+                    } else {
+                        Err(io::Error::from(io::ErrorKind::InvalidInput))?
+                    }
+                }
+                src.file_name()
+                    .map(|s| s.to_str().unwrap().to_owned())
+                    .map(split_file_at_dot)
+                    .ok_or(io::Error::from(io::ErrorKind::InvalidInput))??
+            };
+            let src_suffix = match src_suffix.as_str() {
+                "bin" => "bin",
+                "mp3" => "mp3",
+                _ => Err(io::Error::from(io::ErrorKind::InvalidInput))?,
+            };
+            let mut src = OpenOptions::new().read(true).open(src)?;
+            let mut dest = self.store(src_name, src_suffix)?;
+            io::copy(&mut src, &mut dest)?;
         }
-        todo!("import is not done")
-        // Ok(())
+        fs::remove_dir_all(&self.tmp_dir)?;
+        Ok(())
     }
 
     pub fn export(&self, dir: PathBuf) -> io::Result<()> {
