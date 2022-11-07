@@ -80,7 +80,7 @@ jobs:
           sed -i '/\[dependencies\]/a openssl = { version = "0.10", features = ["vendored"] }' Cargo.toml
 
       - name: Dist
-        if: not(matrix.target == 'aarch64-unknown-linux-gnu' || 'arm-unknown-linux-gnueabihf')
+        if: !(matrix.target == 'aarch64-unknown-linux-gnu' || 'arm-unknown-linux-gnueabihf')
         uses: actions-rs/cargo@v1
         with:
           command: build
