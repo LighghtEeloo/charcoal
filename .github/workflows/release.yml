@@ -16,6 +16,7 @@ env:
 jobs:
   dist:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
@@ -72,7 +73,7 @@ jobs:
       - name: Dist
         uses: actions-rs/cargo@v1
         with:
-          use-cross: true
+#           use-cross: true
           command: build
           args: --target ${{ matrix.target }}
 
