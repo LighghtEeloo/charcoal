@@ -1,0 +1,143 @@
+name: release
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+env:
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  RUSTUP_MAX_RETRIES: 10
+  MACOSX_DEPLOYMENT_TARGET: 10.15
+  CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+  CARGO_TARGET_ARM_UNKNOWN_LINUX_GNUEABIHF_LINKER: arm-linux-gnueabihf-gcc
+
+jobs:
+  dist:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            code-target: win32-x64
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            code-target: win32-arm64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            code-target: linux-x64
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            code-target: linux-arm64
+          - os: ubuntu-latest
+            target: arm-unknown-linux-gnueabihf
+            code-target: linux-armhf
+          - os: macos-11
+            target: x86_64-apple-darwin
+            code-target: darwin-x64
+          - os: macos-11
+            target: aarch64-apple-darwin
+            code-target: darwin-arm64
+
+    name: dist (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+
+    env:
+      RA_TARGET: ${{ matrix.target }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+          
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+          override: true
+
+      - name: Update apt repositories
+        if: matrix.target == 'aarch64-unknown-linux-gnu' || matrix.target == 'arm-unknown-linux-gnueabihf'
+        run: sudo apt-get update
+
+      - name: Install AArch64 target toolchain
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: sudo apt-get install gcc-aarch64-linux-gnu
+
+      - name: Install ARM target toolchain
+        if: matrix.target == 'arm-unknown-linux-gnueabihf'
+        run: sudo apt-get install gcc-arm-linux-gnueabihf
+
+      - name: Dist
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --target ${{ matrix.target }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: dist-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/char-coal
+
+  publish:
+    name: publish
+    runs-on: ubuntu-latest
+    needs: ["dist"]
+    steps:
+      - run: echo "TAG=$(date --iso -u)" >> $GITHUB_ENV
+        if: github.ref == 'refs/heads/release'
+      - run: echo "TAG=nightly" >> $GITHUB_ENV
+        if: github.ref != 'refs/heads/release'
+      - run: 'echo "TAG: $TAG"'
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: ${{ env.FETCH_DEPTH }}
+
+      - run: echo "HEAD_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
+      - run: 'echo "HEAD_SHA: $HEAD_SHA"'
+
+      - uses: actions/download-artifact@v1
+        with:
+          name: dist-aarch64-apple-darwin
+          path: dist
+      - uses: actions/download-artifact@v1
+        with:
+          name: dist-x86_64-apple-darwin
+          path: dist
+      - uses: actions/download-artifact@v1
+        with:
+          name: dist-x86_64-unknown-linux-gnu
+          path: dist
+      - uses: actions/download-artifact@v1
+        with:
+          name: dist-x86_64-unknown-linux-musl
+          path: dist
+      - uses: actions/download-artifact@v1
+        with:
+          name: dist-aarch64-unknown-linux-gnu
+          path: dist
+      - uses: actions/download-artifact@v1
+        with:
+          name: dist-arm-unknown-linux-gnueabihf
+          path: dist
+      - uses: actions/download-artifact@v1
+        with:
+          name: dist-x86_64-pc-windows-msvc
+          path: dist
+      - uses: actions/download-artifact@v1
+        with:
+          name: dist-aarch64-pc-windows-msvc
+          path: dist
+      - run: ls -al ./dist
+
+      - name: Publish Release
+        uses: ./.github/actions/github-release
+        with:
+          files: "dist/*"
+          name: ${{ env.TAG }}
+          token: ${{ secrets.GITHUB_TOKEN }}
