@@ -81,8 +81,8 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
         with:
-          name: dist-${{ matrix.target }}
-          path: target/release/char-coal
+          name: Charcoal-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/char-coal
 
   publish:
     name: publish
@@ -105,35 +105,27 @@ jobs:
 
       - uses: actions/download-artifact@v1
         with:
-          name: dist-aarch64-apple-darwin
+          name: Charcoal-aarch64-apple-darwin
           path: dist
       - uses: actions/download-artifact@v1
         with:
-          name: dist-x86_64-apple-darwin
+          name: Charcoal-x86_64-apple-darwin
           path: dist
       - uses: actions/download-artifact@v1
         with:
-          name: dist-x86_64-unknown-linux-gnu
+          name: Charcoal-x86_64-unknown-linux-gnu
           path: dist
       - uses: actions/download-artifact@v1
         with:
-          name: dist-x86_64-unknown-linux-musl
+          name: Charcoal-aarch64-unknown-linux-gnu
           path: dist
       - uses: actions/download-artifact@v1
         with:
-          name: dist-aarch64-unknown-linux-gnu
+          name: Charcoal-arm-unknown-linux-gnueabihf
           path: dist
       - uses: actions/download-artifact@v1
         with:
-          name: dist-arm-unknown-linux-gnueabihf
-          path: dist
-      - uses: actions/download-artifact@v1
-        with:
-          name: dist-x86_64-pc-windows-msvc
-          path: dist
-      - uses: actions/download-artifact@v1
-        with:
-          name: dist-aarch64-pc-windows-msvc
+          name: Charcoal-x86_64-pc-windows-msvc
           path: dist
       - run: ls -al ./dist
 
