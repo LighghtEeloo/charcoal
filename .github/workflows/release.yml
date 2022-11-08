@@ -51,8 +51,8 @@ jobs:
       - name: Update apt repositories
         if: matrix.os == 'ubuntu-latest'
         run: |
-         sudo apt-get update
-         sudo apt-get install -y libasound2-dev
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev
 
       - name: Dist
         with:
@@ -60,8 +60,7 @@ jobs:
           args: --release --all-features --target ${{ matrix.target }}
           
       - name: Rename
-        run: |
-          mv "target/${{ matrix.target }}/release/char-coal${{ matrix.extension }}" "target/${{ matrix.target }}/release/char-coal$-${{ matrix.target }}{{ matrix.extension }}"
+        run: mv "target/${{ matrix.target }}/release/char-coal${{ matrix.extension }}" "target/${{ matrix.target }}/release/char-coal$-${{ matrix.target }}{{ matrix.extension }}"
         shell: bash
           
       - name: Upload artifacts
