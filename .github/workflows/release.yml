@@ -22,15 +22,10 @@ jobs:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             code-target: win32-x64
+            extension: .exe
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             code-target: linux-x64
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            code-target: linux-arm64
-          - os: ubuntu-latest
-            target: arm-unknown-linux-gnueabihf
-            code-target: linux-armhf
           - os: macos-11
             target: x86_64-apple-darwin
             code-target: darwin-x64
@@ -57,27 +52,9 @@ jobs:
 
       - name: Update apt repositories
         if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get update
-        
-      - name: Install 
-        if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get install -y libasound2-dev
-
-      - name: Install AArch64 target toolchain
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
         run: |
-          sudo apt-get install gcc-aarch64-linux-gnu
-          
-          # Use vendored OpenSSL as dynamically-linked libraries are harder to use with cross
-          sed -i '/\[dependencies\]/a openssl = { version = "0.10", features = ["vendored"] }' Cargo.toml
-
-      - name: Install ARM target toolchain
-        if: matrix.target == 'arm-unknown-linux-gnueabihf'
-        run: |
-          sudo apt-get install gcc-arm-linux-gnueabihf
-          
-          # Use vendored OpenSSL as dynamically-linked libraries are harder to use with cross
-          sed -i '/\[dependencies\]/a openssl = { version = "0.10", features = ["vendored"] }' Cargo.toml
+         sudo apt-get update
+         sudo apt-get install -y libasound2-dev
 
       - name: Dist
         if: (matrix.target != 'aarch64-unknown-linux-gnu' && matrix.target != 'arm-unknown-linux-gnueabihf')
@@ -85,15 +62,6 @@ jobs:
         with:
           command: build
           args: --release --all-features --target ${{ matrix.target }}
-          
-      - name: Dist Cross
-        if: (matrix.target == 'aarch64-unknown-linux-gnu' || matrix.target == 'arm-unknown-linux-gnueabihf')
-        uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: build
-          args: --release --all-features --target ${{ matrix.target }}
-
 
       - name: debug
         if: matrix.os == 'windows-latest'
@@ -103,7 +71,7 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: Charcoal-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/char-coal
+          path: target/${{ matrix.target }}/release/char-coal${{ matrix.extension }}
 
   publish:
     name: publish
@@ -135,14 +103,6 @@ jobs:
       - uses: actions/download-artifact@v1
         with:
           name: Charcoal-x86_64-unknown-linux-gnu
-          path: dist
-      - uses: actions/download-artifact@v1
-        with:
-          name: Charcoal-aarch64-unknown-linux-gnu
-          path: dist
-      - uses: actions/download-artifact@v1
-        with:
-          name: Charcoal-arm-unknown-linux-gnueabihf
           path: dist
       - uses: actions/download-artifact@v1
         with:
