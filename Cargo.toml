@@ -1,6 +1,6 @@
 [package]
 name = "char-coal"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 authors = ["LitiaEeloo <litiaeeloo@gmail.com>"]
 description = "A command line dictionary"
@@ -33,7 +33,7 @@ bincode = "1.3"
 tar = "0.4"
 
 # cli
-clap = { version = "3.2", features = ["derive"] }
+clap = { version = "4.0", features = ["derive"] }
 colored = "2.0"
 
 # path management
@@ -46,7 +46,7 @@ reqwest = { version = "0.11", features = ["json"] }
 scraper = "0.13"
 
 # play audio
-rodio = { version = "0.15", features = ["symphonia-mp3"]}
+rodio = { version = "0.16", features = ["symphonia-mp3"]}
 
 # language
 whatlang = "0.16"
