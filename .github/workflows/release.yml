@@ -55,10 +55,15 @@ jobs:
           sudo apt-get install -y libasound2-dev
 
       - name: Dist
+        uses: actions-rs/cargo@v1
         with:
           command: build
           args: --release --all-features --target ${{ matrix.target }}
           
+      - name: Rename
+        shell: bash
+        run: |
+          mv "target/${{ matrix.target }}/release/char-coal${{ matrix.extension }}" "target/${{ matrix.target }}/release/char-coal$-${{ matrix.target }}{{ matrix.extension }}"
  
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
