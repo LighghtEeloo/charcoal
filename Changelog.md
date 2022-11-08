@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.1
+- CI. Auto release.
+
 ## 0.2.0
 - Impl. Cache system interaction.
 
