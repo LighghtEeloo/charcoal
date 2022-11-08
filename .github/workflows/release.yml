@@ -11,6 +11,10 @@ env:
   RUSTUP_MAX_RETRIES: 10
   MACOSX_DEPLOYMENT_TARGET: 10.15
 
+concurrency: 
+  group: release
+  cancel-in-progress: true
+
 jobs:
   dist:
     strategy:
@@ -40,7 +44,20 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-          
+
+      - name: Cargo Cache
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/            
+          key: ${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ matrix.target }}-cargo-
+
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
