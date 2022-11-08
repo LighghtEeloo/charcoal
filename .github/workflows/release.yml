@@ -59,10 +59,7 @@ jobs:
           command: build
           args: --release --all-features --target ${{ matrix.target }}
           
-      - name: Rename
-        run: mv "target/${{ matrix.target }}/release/char-coal${{ matrix.extension }}" "target/${{ matrix.target }}/release/char-coal$-${{ matrix.target }}{{ matrix.extension }}"
-        shell: bash
-          
+ 
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
         with:
