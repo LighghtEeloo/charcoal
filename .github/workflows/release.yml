@@ -80,7 +80,7 @@ jobs:
       - name: Rename
         shell: bash
         run: |
-          mv "target/${{ matrix.target }}/release/char-coal${{ matrix.extension }}" "target/${{ matrix.target }}/release/char-coal$-${{ matrix.target }}{{ matrix.extension }}"
+          mv "target/${{ matrix.target }}/release/char-coal${{ matrix.extension }}" "target/${{ matrix.target }}/release/char-coal$-${{ matrix.target }}${{ matrix.extension }}"
  
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
