@@ -1,10 +1,7 @@
 # Changelog
 
-## 0.2.3
-- Bump.
-
-## 0.2.2
-- Bump.
+## 0.2.2 - 0.2.4
+- Bump. Small refactors.
 
 ## 0.2.1
 - CI. Auto release.
