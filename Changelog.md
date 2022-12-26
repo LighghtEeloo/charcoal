@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.5
+- Bump. Change crate name to `charcoal-dict`.
+
 ## 0.2.2 - 0.2.4
 - Bump. Small refactors.
 

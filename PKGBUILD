@@ -1,7 +1,7 @@
 # Maintainer: LitiaEeloo <litiaeeloo@gmail.com>
 
 pkgname=charcoal
-pkgver=0.2.4
+pkgver=0.2.5
 pkgrel=1
 pkgdesc="Charcoal, a command line dictionary"
 arch=('x86_64')

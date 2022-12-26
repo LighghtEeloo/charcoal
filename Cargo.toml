@@ -1,6 +1,6 @@
 [package]
-name = "char-coal"
-version = "0.2.4"
+name = "charcoal-dict"
+version = "0.2.5"
 edition = "2021"
 authors = ["LitiaEeloo <litiaeeloo@gmail.com>"]
 description = "A command line dictionary"
@@ -10,6 +10,9 @@ repository = "https://github.com/LighghtEeloo/Charcoal"
 license = "MIT"
 keywords = ["cli", "search", "translation", "translate"]
 categories = ["command-line-utilities"]
+
+[[bin]]
+name = "charcoal"
 
 [dependencies]
 # error handling
