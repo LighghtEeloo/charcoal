@@ -19,7 +19,8 @@ srcinfo_aur = root_parent.joinpath(repo_aur, srcinfo)
 
 if __name__ == "__main__":
 
-    def bump_ver(ver):
+    def bump_ver():
+        ver = sys.argv[2]
         os.system(f"cargo set-version {ver}")
         with open(pkgbuild_proj, "r") as f:
             pkgcontent = f.readlines()
@@ -34,7 +35,12 @@ if __name__ == "__main__":
         os.system(f"makepkg --printsrcinfo > {srcinfo_aur}")
         os.system(f"rm charcoal-*.tar.gz")
 
+    def all():
+        bump_ver()
+        upload_pkg()
+
     {
-        "bump": lambda: bump_ver(sys.argv[2]),
-        "upload": lambda: upload_pkg(),
-    }[sys.argv[1]]
+        "bump": bump_ver,
+        "upload": upload_pkg,
+        "all": all,
+    }[sys.argv[1]]()
