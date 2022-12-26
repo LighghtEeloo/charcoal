@@ -1,7 +1,7 @@
 # Maintainer: LitiaEeloo <litiaeeloo@gmail.com>
 
 pkgname=charcoal
-pkgver=0.2.5
+pkgver=0.2.6
 pkgrel=1
 pkgdesc="Charcoal, a command line dictionary"
 arch=('x86_64')
@@ -33,7 +33,7 @@ check() {
 
 package() {
   cd "$pkgname-$pkgver"
-  install -Dm 755 "target/release/char-coal" -t "$pkgdir/usr/bin"
+  install -Dm 755 "target/release/charcoal" -t "$pkgdir/usr/bin"
   install -Dm 644 Readme.md -t "$pkgdir/usr/share/doc/$pkgname"
   install -Dm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
 }

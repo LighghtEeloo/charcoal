@@ -1,6 +1,6 @@
 [package]
 name = "charcoal-dict"
-version = "0.2.5"
+version = "0.2.6"
 edition = "2021"
 authors = ["LitiaEeloo <litiaeeloo@gmail.com>"]
 description = "A command line dictionary"
