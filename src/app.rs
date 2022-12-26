@@ -55,9 +55,9 @@ impl App {
     pub async fn edit(args: cli::EditArgs) -> anyhow::Result<()> {
         use std::process::Command;
 
-        let editor = std::env::var("EDITOR").or_else(|err| {
+        let editor = std::env::var("EDITOR").map_err(|err| {
             println!("Please set $EDITOR to your preferred editor.");
-            Err(err)
+            err
         })?;
         let config_path = {
             let app_builder = AppBuilder::new();

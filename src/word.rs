@@ -45,11 +45,11 @@ impl WordEntry {
     }
 
     pub fn is_empty(&self) -> bool {
-        return self.pronunciation.is_empty()
+        self.pronunciation.is_empty()
             && self.brief.is_empty()
             && self.variants.is_empty()
             && self.authority.is_empty()
-            && self.sentence.is_empty();
+            && self.sentence.is_empty()
     }
 }
 
@@ -64,7 +64,7 @@ impl FromYoudict {
     ) -> anyhow::Result<WordEntry> {
         futures::executor::block_on(async {
             let word_entry = self.query(word_query).await?;
-            let file = cache.store(&word_query.word(), "bin")?;
+            let file = cache.store(word_query.word(), "bin")?;
             bincode::serialize_into(file, &word_entry)?;
             Ok(word_entry)
         })

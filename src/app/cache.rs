@@ -26,7 +26,7 @@ impl CacheFile {
     }
     fn generate(s: String) -> Self {
         let hash_num = CacheFile::str_hash(&s);
-        if s.contains(" ") || !s.is_ascii() {
+        if s.contains(' ') || !s.is_ascii() {
             CacheFile::Absurd(hash_num)
         } else {
             CacheFile::Normal((hash_num % 256) as u8, s)
@@ -60,7 +60,7 @@ impl Cache {
     }
 
     fn get_file_path(&self, word: impl AsRef<str>, suffix: &'static str) -> io::Result<PathBuf> {
-        CacheFile::generate(word.as_ref().to_owned()).consume(&self, suffix)
+        CacheFile::generate(word.as_ref().to_owned()).consume(self, suffix)
     }
 
     pub fn query(&self, word: impl AsRef<str>, suffix: &'static str) -> io::Result<File> {
@@ -87,7 +87,7 @@ impl Cache {
     }
 
     fn tilde_expand(dir: impl AsRef<Path>) -> io::Result<PathBuf> {
-        let mut path = (dir.as_ref().into_iter().take(1))
+        let mut path = (dir.as_ref().iter().take(1))
             .map(|s| -> io::Result<_> {
                 if s == "~" {
                     Ok(directories_next::UserDirs::new()
@@ -99,7 +99,7 @@ impl Cache {
                 }
             })
             .collect::<io::Result<PathBuf>>()?;
-        for s in dir.as_ref().into_iter().skip(1) {
+        for s in dir.as_ref().iter().skip(1) {
             path.push(s)
         }
         Ok(path)
@@ -107,8 +107,7 @@ impl Cache {
 
     fn ensure_dir(dir: &PathBuf) -> io::Result<()> {
         if (dir.parent())
-            .map(|p| if p.exists() { Some(()) } else { None })
-            .flatten()
+            .and_then(|p| if p.exists() { Some(()) } else { None })
             .is_none()
         {
             println!("Parent dir of target not exist.");

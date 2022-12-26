@@ -44,15 +44,14 @@ impl Select for FromYoudict {
         let variants = {
             let sel = Selector::parse("#phrsListTab .trans-container p").unwrap();
             doc.select(&sel)
-                .map(|child| {
+                .flat_map(|child| {
                     child.text().map(|t| {
-                        t.split("\n")
+                        t.split('\n')
                             .filter_map(trim_str)
                             .collect::<Vec<String>>()
                             .join(" ")
                     })
                 })
-                .flatten()
                 .filter(|s| !s.is_empty())
                 .collect()
         };

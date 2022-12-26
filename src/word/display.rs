@@ -5,13 +5,13 @@ impl WordEntry {
     pub fn display(&self, word_query: &WordQuery, config: &Config) {
         let normal = &config.normal;
 
-        print!("{}\n", word_query.word().bright_red());
+        println!("{}", word_query.word().bright_red());
 
         if normal.with_pronunciation && !self.pronunciation.is_empty() {
             for (accent, pron) in self.pronunciation.iter() {
                 print!("{} {}\t", accent, pron.cyan())
             }
-            print!("\n");
+            println!();
         }
 
         for line in self.brief.iter() {

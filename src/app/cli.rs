@@ -2,9 +2,8 @@ use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
-/// A command line dictionary
 #[derive(Parser, Debug)]
-#[clap(version, about)]
+#[clap(version, about, long_about = None)]
 pub struct Cli {
     #[clap(subcommand)]
     pub commands: Commands,
