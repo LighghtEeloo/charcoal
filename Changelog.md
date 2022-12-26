@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.3
+- Bump.
+
 ## 0.2.2
 - Bump.
 

@@ -1,6 +1,6 @@
 [package]
 name = "char-coal"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
 authors = ["LitiaEeloo <litiaeeloo@gmail.com>"]
 description = "A command line dictionary"
@@ -21,7 +21,7 @@ futures = { version = "0.3", features = ["executor"] }
 
 # logging
 log = "0.4"
-env_logger = "0.9"
+env_logger = "0.10"
 
 # serde
 serde = { version = "1", features = ["derive"] }
@@ -38,12 +38,12 @@ colored = "2.0"
 
 # path management
 directories-next = "2.0"
-shellexpand = "2.1"
+shellexpand = "3.0"
 
 # web
 url = "2"
 reqwest = { version = "0.11", features = ["json"] }
-scraper = "0.13"
+scraper = "0.14"
 
 # play audio
 rodio = { version = "0.16", features = ["symphonia-mp3"]}
