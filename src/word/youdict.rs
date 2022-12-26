@@ -1,13 +1,25 @@
-mod authority;
 mod sentence;
 
 use self::sentence::Sentence;
-use super::{FromYoudict, WordEntry, WordQuery};
+use super::{FromYoudict, Query, Select, WordEntry, WordQuery};
 use scraper::{ElementRef, Selector};
 
-pub trait Select {
-    type Target;
-    fn select(elem: ElementRef, word_query: &WordQuery) -> anyhow::Result<Self::Target>;
+impl Query for FromYoudict {
+    fn query(&mut self, word_query: &WordQuery) -> anyhow::Result<WordEntry> {
+        async fn get_html(url: impl AsRef<str> + reqwest::IntoUrl) -> anyhow::Result<String> {
+            let body = reqwest::get(url).await?.text().await?;
+            Ok(body)
+        }
+        let youdao_dict_url = url::Url::parse(&format!(
+            "http://dict.youdao.com/search?q={}",
+            word_query.word()
+        ))?;
+
+        let xml = futures::executor::block_on(async { get_html(youdao_dict_url).await })?;
+        let doc = scraper::Html::parse_document(&xml);
+
+        FromYoudict::select(doc.root_element(), word_query)
+    }
 }
 
 impl Select for FromYoudict {

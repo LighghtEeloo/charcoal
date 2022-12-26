@@ -1,10 +1,10 @@
+pub mod cached;
 pub mod display;
-pub mod query;
-pub mod select;
 pub mod speech;
+pub mod youdict;
 
-use self::query::Query;
 use crate::Cache;
+use scraper::ElementRef;
 use serde::{Deserialize, Serialize};
 use whatlang::Lang;
 
@@ -52,6 +52,15 @@ impl WordEntry {
             && self.authority.is_empty()
             && self.sentence.is_empty()
     }
+}
+
+pub trait Query {
+    fn query(&mut self, word_query: &WordQuery) -> anyhow::Result<WordEntry>;
+}
+
+pub trait Select {
+    type Target;
+    fn select(elem: ElementRef, word_query: &WordQuery) -> anyhow::Result<Self::Target>;
 }
 
 pub struct FromYoudict;
