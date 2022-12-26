@@ -4,10 +4,9 @@ from pathlib import Path
 repo_proj = "charcoal"
 repo_aur = "charcoal-aur"
 
-root_parent = Path(os.getcwd()).parent.parent
-os.chdir(root_parent)
+root_parent = Path(os.getcwd()).parent
 # .
-# |- <repo_proj>
+# |- <repo_proj> [here you are]
 # |- <repo_aur>
 
 pkgbuild = "PKGBUILD"
