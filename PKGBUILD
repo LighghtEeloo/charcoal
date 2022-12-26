@@ -11,7 +11,6 @@ license=('MIT')
 depends=()
 makedepends=('cargo')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
-sha512sums=('')
 
 prepare() {
   mv "$srcdir/$reponame-$pkgver" "$srcdir/$pkgname-$pkgver"
@@ -38,3 +37,4 @@ package() {
   install -Dm 644 Readme.md -t "$pkgdir/usr/share/doc/$pkgname"
   install -Dm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
 }
+
