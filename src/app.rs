@@ -27,7 +27,7 @@ impl App {
         config.apply(&mut args);
 
         let word_query = {
-            let word_query = WordQuery::new(args.query());
+            let word_query = ExactQuery::new(args.query());
             if let Some(word_query) = word_query {
                 word_query
             } else {
@@ -37,14 +37,14 @@ impl App {
         };
 
         let word_speech = Speech::query(&word_query, &cache, config.speak);
-        let word_entry = WordEntry::query(&word_query, &cache).await?;
+        let word_entry = SingleEntry::query(&word_query, &cache).await?;
 
         if word_entry.is_empty() {
             println!("Word not found.");
             return Ok(());
         }
 
-        word_entry.display(&word_query, &config);
+        word_entry.pprint(&word_query, &config);
         if let Err(err) = word_speech.await {
             log::error!("An error occured in speech module: {:?}.", err)
         }

@@ -1,19 +1,19 @@
 pub mod cached;
-pub mod display;
+pub mod pprint;
 pub mod speech;
 pub mod youdict;
 
-use crate::Cache;
-use scraper::ElementRef;
+use crate::{Cache, Config};
+use scraper::{ElementRef, Html};
 use serde::{Deserialize, Serialize};
 use whatlang::Lang;
 
-pub struct WordQuery {
+pub struct ExactQuery {
     word: String,
     lang: Lang,
 }
 
-impl<'a> WordQuery {
+impl<'a> ExactQuery {
     pub fn new(word: String) -> Option<Self> {
         if word.is_empty() {
             return None;
@@ -30,7 +30,7 @@ impl<'a> WordQuery {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct WordEntry {
+pub struct SingleEntry {
     pub pronunciation: Vec<(String, String)>,
     pub brief: Vec<String>,
     pub variants: Vec<String>,
@@ -38,11 +38,11 @@ pub struct WordEntry {
     pub sentence: Vec<(String, String)>,
 }
 
-impl WordEntry {
+impl SingleEntry {
     /// Query a word first from cache and then from the web
-    pub async fn query(word_query: &WordQuery, cache: &Cache) -> anyhow::Result<Self> {
-        (FromCache::new(cache).query(&word_query))
-            .or_else(|_err| FromYoudict::new().query_and_store(word_query, cache))
+    pub async fn query(word_query: &ExactQuery, cache: &Cache) -> anyhow::Result<Self> {
+        (QueryCache::new(cache).query(&word_query))
+            .or_else(|_err| QueryYoudict::new().query_and_store(word_query, cache))
     }
 
     pub fn is_empty(&self) -> bool {
@@ -55,23 +55,36 @@ impl WordEntry {
 }
 
 pub trait Query {
-    fn query(&mut self, word_query: &WordQuery) -> anyhow::Result<WordEntry>;
+    type WordQuery;
+    type WordEntry;
+    fn query(&mut self, word_query: &Self::WordQuery) -> anyhow::Result<Self::WordEntry>;
+}
+
+pub trait Request {
+    type WordQuery;
+    fn request(&mut self, word_query: &Self::WordQuery) -> anyhow::Result<Html>;
 }
 
 pub trait Select {
+    type WordQuery;
     type Target;
-    fn select(elem: ElementRef, word_query: &WordQuery) -> anyhow::Result<Self::Target>;
+    fn select(elem: ElementRef, word_query: &Self::WordQuery) -> anyhow::Result<Self::Target>;
 }
 
-pub struct FromYoudict;
+pub trait PPrint {
+    type WordQuery;
+    fn pprint(&self, word_query: &Self::WordQuery, config: &Config);
+}
 
-impl FromYoudict {
+pub struct QueryYoudict;
+
+impl QueryYoudict {
     pub fn new() -> Self {
         Self
     }
     pub fn query_and_store(
-        &mut self, word_query: &WordQuery, cache: &Cache,
-    ) -> anyhow::Result<WordEntry> {
+        &mut self, word_query: &ExactQuery, cache: &Cache,
+    ) -> anyhow::Result<SingleEntry> {
         let word_entry = self.query(word_query)?;
         let file = cache.store(word_query.word(), "bin")?;
         bincode::serialize_into(file, &word_entry)?;
@@ -79,11 +92,11 @@ impl FromYoudict {
     }
 }
 
-pub struct FromCache<'a> {
+pub struct QueryCache<'a> {
     cache: &'a Cache,
 }
 
-impl<'a> FromCache<'a> {
+impl<'a> QueryCache<'a> {
     pub fn new(cache: &'a Cache) -> Self {
         Self { cache }
     }

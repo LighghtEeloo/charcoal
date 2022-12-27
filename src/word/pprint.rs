@@ -1,8 +1,11 @@
-use crate::{Config, WordEntry, WordQuery};
+use super::PPrint;
+use crate::{Config, ExactQuery, SingleEntry};
 use colored::Colorize;
 
-impl WordEntry {
-    pub fn display(&self, word_query: &WordQuery, config: &Config) {
+impl PPrint for SingleEntry {
+    type WordQuery = ExactQuery;
+
+    fn pprint(&self, word_query: &ExactQuery, config: &Config) {
         let normal = &config.normal;
 
         println!("{}", word_query.word().bright_red());

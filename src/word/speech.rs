@@ -1,4 +1,4 @@
-use crate::{Cache, WordQuery};
+use crate::{Cache, ExactQuery};
 use rodio::{Decoder, OutputStream, Sink};
 use std::{
     fs::File,
@@ -9,7 +9,7 @@ pub struct Speech;
 
 impl Speech {
     pub async fn query(
-        word_query: &WordQuery, cache: &Cache, is_speak: bool,
+        word_query: &ExactQuery, cache: &Cache, is_speak: bool,
     ) -> anyhow::Result<()> {
         if is_speak {
             let file = Speech::store(word_query, cache).await?;
@@ -19,7 +19,7 @@ impl Speech {
         }
     }
 
-    fn url(word_query: &WordQuery) -> String {
+    fn url(word_query: &ExactQuery) -> String {
         let code = if word_query.is_western() {
             "en"
         } else {
@@ -32,7 +32,7 @@ impl Speech {
         )
     }
 
-    async fn store(word_query: &WordQuery, cache: &Cache) -> anyhow::Result<File> {
+    async fn store(word_query: &ExactQuery, cache: &Cache) -> anyhow::Result<File> {
         let word = word_query.word();
         let file = (cache.query(word, "mp3")).or_else(|_| -> anyhow::Result<File> {
             let url = Speech::url(word_query);

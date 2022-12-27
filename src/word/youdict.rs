@@ -1,11 +1,18 @@
-mod sentence;
+use super::{ExactQuery, Query, QueryYoudict, Request, Select, SingleEntry};
+use scraper::{ElementRef, Html, Selector};
 
-use self::sentence::Sentence;
-use super::{FromYoudict, Query, Select, WordEntry, WordQuery};
-use scraper::{ElementRef, Selector};
+impl Query for QueryYoudict {
+    type WordQuery = ExactQuery;
+    type WordEntry = SingleEntry;
+    fn query(&mut self, word_query: &ExactQuery) -> anyhow::Result<SingleEntry> {
+        let doc = self.request(word_query)?;
+        QueryYoudict::select(doc.root_element(), word_query)
+    }
+}
 
-impl Query for FromYoudict {
-    fn query(&mut self, word_query: &WordQuery) -> anyhow::Result<WordEntry> {
+impl Request for QueryYoudict {
+    type WordQuery = ExactQuery;
+    fn request(&mut self, word_query: &ExactQuery) -> anyhow::Result<Html> {
         async fn get_html(url: impl AsRef<str> + reqwest::IntoUrl) -> anyhow::Result<String> {
             let body = reqwest::get(url).await?.text().await?;
             Ok(body)
@@ -18,14 +25,15 @@ impl Query for FromYoudict {
         let xml = futures::executor::block_on(async { get_html(youdao_dict_url).await })?;
         let doc = scraper::Html::parse_document(&xml);
 
-        FromYoudict::select(doc.root_element(), word_query)
+        Ok(doc)
     }
 }
 
-impl Select for FromYoudict {
-    type Target = WordEntry;
+impl Select for QueryYoudict {
+    type WordQuery = ExactQuery;
+    type Target = SingleEntry;
 
-    fn select(elem: ElementRef, word_query: &WordQuery) -> anyhow::Result<Self::Target> {
+    fn select(elem: ElementRef, word_query: &ExactQuery) -> anyhow::Result<Self::Target> {
         let doc = elem;
         let pronunciation = {
             let sel = Selector::parse("span.pronounce").unwrap();
@@ -70,13 +78,78 @@ impl Select for FromYoudict {
 
         let sentence = Sentence::select(elem, word_query)?;
 
-        Ok(WordEntry {
+        Ok(SingleEntry {
             pronunciation,
             brief,
             variants,
             authority: Vec::new(),
             sentence,
         })
+    }
+}
+
+pub struct Sentence;
+
+impl Select for Sentence {
+    type WordQuery = ExactQuery;
+    type Target = Vec<(String, String)>;
+
+    fn select(elem: ElementRef, word_query: &ExactQuery) -> anyhow::Result<Self::Target> {
+        let sel = Selector::parse("#bilingual.trans-container li").unwrap();
+        Ok(elem
+            .select(&sel)
+            .filter_map(|child| Sen::select(child, word_query).ok())
+            .collect())
+    }
+}
+
+struct Sen;
+const PUNCTUATORS: &[char; 10] = &['.', ',', '\"', '\'', '?', '!', ':', '-', '<', '>'];
+
+impl Select for Sen {
+    type WordQuery = ExactQuery;
+    type Target = (String, String);
+
+    fn select(elem: ElementRef, word_query: &ExactQuery) -> anyhow::Result<Self::Target> {
+        let sel = Selector::parse("p").unwrap();
+        let mut iter = elem.select(&sel);
+
+        let mut extract_to_vec = |msg| -> Vec<String> {
+            iter.next()
+                .expect(msg)
+                .text()
+                .filter_map(trim_str)
+                .collect()
+        };
+
+        fn western_concat(vec: Vec<String>) -> String {
+            let mut ori = String::new();
+            let mut ori_iter = vec.into_iter();
+            if let Some(s) = ori_iter.next() {
+                ori.push_str(&s)
+            }
+            for mut s in ori_iter {
+                if !s.starts_with(PUNCTUATORS) {
+                    s.insert(0, ' ')
+                }
+                ori.push_str(&s)
+            }
+            ori
+        }
+
+        fn eastern_concat(vec: Vec<String>) -> String {
+            vec.join("")
+        }
+
+        let ori_vec = extract_to_vec("No ori found in sentence");
+        let trans_vec = extract_to_vec("No trans found in sentence");
+
+        let (ori, trans) = if word_query.is_western() {
+            (western_concat(ori_vec), eastern_concat(trans_vec))
+        } else {
+            (eastern_concat(ori_vec), western_concat(trans_vec))
+        };
+        Ok((ori, trans))
     }
 }
 
