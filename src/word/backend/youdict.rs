@@ -1,10 +1,11 @@
-use super::{ExactQuery, Query, QueryYoudict, Request, Select, SingleEntry};
+use crate::word::{Acquire, ExactQuery, QueryYoudict, Question, Request, Select, SingleEntry};
 use scraper::{ElementRef, Html, Selector};
+use whatlang::Lang;
 
-impl Query for QueryYoudict {
+impl Acquire for QueryYoudict {
     type WordQuery = ExactQuery;
     type WordEntry = SingleEntry;
-    fn query(&mut self, word_query: &ExactQuery) -> anyhow::Result<SingleEntry> {
+    fn acquire(self, word_query: &ExactQuery) -> anyhow::Result<SingleEntry> {
         let doc = self.request(word_query)?;
         QueryYoudict::select(doc.root_element(), word_query)
     }
@@ -12,7 +13,7 @@ impl Query for QueryYoudict {
 
 impl Request for QueryYoudict {
     type WordQuery = ExactQuery;
-    fn request(&mut self, word_query: &ExactQuery) -> anyhow::Result<Html> {
+    fn request(self, word_query: &ExactQuery) -> anyhow::Result<Html> {
         async fn get_html(url: impl AsRef<str> + reqwest::IntoUrl) -> anyhow::Result<String> {
             let body = reqwest::get(url).await?.text().await?;
             Ok(body)
@@ -144,7 +145,8 @@ impl Select for Sen {
         let ori_vec = extract_to_vec("No ori found in sentence");
         let trans_vec = extract_to_vec("No trans found in sentence");
 
-        let (ori, trans) = if word_query.is_western() {
+        let (ori, trans) = if matches!(word_query.assumed_lang(), Lang::Cmn | Lang::Jpn | Lang::Kor)
+        {
             (western_concat(ori_vec), eastern_concat(trans_vec))
         } else {
             (eastern_concat(ori_vec), western_concat(trans_vec))

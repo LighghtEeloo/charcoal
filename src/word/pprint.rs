@@ -1,5 +1,4 @@
-use super::PPrint;
-use crate::{Config, ExactQuery, SingleEntry};
+use super::{Config, ExactQuery, PPrint, Question, SingleEntry};
 use colored::Colorize;
 
 impl PPrint for SingleEntry {

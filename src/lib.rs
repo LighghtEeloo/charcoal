@@ -11,4 +11,6 @@ pub use app::cli::{Cli, Commands};
 pub use app::config::Config;
 pub use app::App;
 pub use word::speech::Speech;
-pub use word::{ExactQuery, PPrint, SingleEntry};
+pub use word::{Acquire, PPrint};
+pub use word::{Answer, Question};
+pub use word::{ExactQuery, SingleEntry};

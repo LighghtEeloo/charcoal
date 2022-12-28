@@ -39,7 +39,7 @@ impl App {
         let word_speech = Speech::query(&word_query, &cache, config.speak);
         let word_entry = SingleEntry::query(&word_query, &cache).await?;
 
-        if word_entry.is_empty() {
+        if word_entry.not_found() {
             println!("Word not found.");
             return Ok(());
         }
