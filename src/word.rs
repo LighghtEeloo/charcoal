@@ -1,6 +1,5 @@
 mod backend;
-mod frontend;
-pub mod pprint;
+pub mod frontend;
 pub mod speech;
 
 use crate::Config;
@@ -8,11 +7,10 @@ use scraper::{ElementRef, Html};
 use whatlang::Lang;
 
 pub use backend::*;
-pub use frontend::{ExactQuery, SingleEntry};
 
 pub trait Question {
     fn word(&self) -> String;
-    fn assumed_lang(&self) -> Lang;
+    fn inferred_lang(&self) -> Lang;
 }
 pub trait Answer {
     fn not_found(&self) -> bool;
@@ -35,7 +33,6 @@ trait Select {
     fn select(elem: ElementRef, word_query: &Self::WordQuery) -> anyhow::Result<Self::Target>;
 }
 
-pub trait PPrint {
-    type WordQuery;
-    fn pprint(&self, word_query: &Self::WordQuery, config: &Config);
+pub trait PPrint: Answer {
+    fn pprint(&self, word_query: &impl Question, config: &Config);
 }

@@ -13,4 +13,4 @@ pub use app::App;
 pub use word::speech::Speech;
 pub use word::{Acquire, PPrint};
 pub use word::{Answer, Question};
-pub use word::{ExactQuery, SingleEntry};
+pub use word::frontend::{ExactQuery, SingleEntry};

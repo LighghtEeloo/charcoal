@@ -1,4 +1,5 @@
-use crate::word::{Acquire, ExactQuery, QueryYoudict, Question, Request, Select, SingleEntry};
+use crate::word::{Acquire, QueryYoudict, Request, Select};
+use crate::{ExactQuery, SingleEntry, Question};
 use scraper::{ElementRef, Html, Selector};
 use whatlang::Lang;
 
@@ -145,7 +146,7 @@ impl Select for Sen {
         let ori_vec = extract_to_vec("No ori found in sentence");
         let trans_vec = extract_to_vec("No trans found in sentence");
 
-        let (ori, trans) = if matches!(word_query.assumed_lang(), Lang::Cmn | Lang::Jpn | Lang::Kor)
+        let (ori, trans) = if matches!(word_query.inferred_lang(), Lang::Cmn | Lang::Jpn | Lang::Kor)
         {
             (western_concat(ori_vec), eastern_concat(trans_vec))
         } else {
