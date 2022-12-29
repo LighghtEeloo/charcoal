@@ -1,9 +1,7 @@
 name: aur-publish
 
 on:
-  push:
-    tags:
-      - '*'
+  workflow_dispatch: {}
 
 jobs:
   aur-publish:
