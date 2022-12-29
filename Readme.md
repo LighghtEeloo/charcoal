@@ -19,7 +19,7 @@ brew install lighghteeloo/charcoal/charcoal
 Build from source:
 
 ```sh
-cargo install char-coal
+cargo install charcoal-dict
 ```
 
 ### Small Tips Ahead
@@ -27,7 +27,7 @@ cargo install char-coal
 Aliasing common command to `chr`, `wd` or anything shorter is recommended (`cc` if you don't mind?)
 
 ```sh
-alias chr="char-coal query -s"
+alias chr="charcoal query -s"
 ```
 
 No manually designated dependencies are required. See `Cargo.toml` if you are interested in the crates charcoal is using.
@@ -38,7 +38,7 @@ No manually designated dependencies are required. See `Cargo.toml` if you are in
 ### Query
 
 ```sh
-char-coal query <QUERY>
+charcoal query <QUERY>
 ```
 
 where query can be shortened as `q`, `search`, or `s`.
@@ -50,7 +50,7 @@ With `-s` or `--speak-as true` one can force the happening of a speech.
 You may want to edit the configuration file in an easy way. Charcoal gets you covered:
 
 ```sh
-char-coal edit
+charcoal edit
 ```
 
 And with `--reset` it will generate a brand new configuration in case anything gets wrong.
@@ -62,7 +62,7 @@ For more details on configuration file, see *Configuration* section.
 Charcoal caches up your queries, both text and audio. While it's nice for repetitive queries, it takes up some space. If you want, you can clean them with:
 
 ```sh
-char-coal clean
+charcoal clean
 ```
 
 For more details on cache, see *Caching Strategy* section.
@@ -72,13 +72,13 @@ For more details on cache, see *Caching Strategy* section.
 To see more options, run
 
 ```sh
-char-coal help
+charcoal help
 ```
 
 for help on subcommands, or
 
 ```sh
-char-coal query --help
+charcoal query --help
 ```
 
 for each subcommand, say, `query`.
