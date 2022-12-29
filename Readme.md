@@ -47,7 +47,7 @@ With `-s` or `--speak-as true` one can force the happening of a speech.
 
 ### Edit
 
-You may want to edit the configuration file in an easy way. Charcoal gets you covered:
+You may want to edit the configuration file in an easy way. `charcoal` gets you covered:
 
 ```sh
 charcoal edit
@@ -93,22 +93,22 @@ Configurations are straight forward. Just change the booleans and they're yours.
 Clone and build from source:
 
 ```sh
-git clone git@github.com:LighghtEeloo/Charcoal.git
-cd Charcoal
+git clone git@github.com:LighghtEeloo/charcoal.git
+cd charcoal
 cargo build --all
 ```
 
 Alias:
 
 ```sh
-cd Charcoal
+cd charcoal
 cargo build --all
-alias chr="RUST_LOG=info target/debug/char-coal query -s"
+alias chr="RUST_LOG=info target/debug/charcoal query -s"
 ```
 
 ## Caching Strategy
 
-As a tiny cli tool, charcoal can't guarantee 100% cache consistency; however, its caching strategy is delicately designed such that inconsistency is rare and of little harm.
+As a tiny cli tool, `charcoal` can't guarantee 100% cache consistency; however, its caching strategy is delicately designed such that inconsistency is rare and of little harm.
 
 Only ascii with out space will be saved by name, under `cache` directory, to achieve better compatibility; the rest will be hashed and then saved under `vault` directory.
 
@@ -126,6 +126,8 @@ No privacy collection will be performed.
 
 ## Credits
 
-@TomCC7 for kindly supporting, testing and making suggestions for charcoal.
+@TomCC7 for kindly supporting, testing and making suggestions for `charcoal`.
 
 @BinhaoQin for providing advice (and patience!) on PKGBUILD.
+
+@Gorgeous-Patrick for updating outdated readme.
