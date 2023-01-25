@@ -6,7 +6,7 @@ import time
 
 args = {
     "bank_path": "data/bank.json",
-    "known_path": "_data/known.json",
+    "known_path": "data/known.json",
 }
 
 
@@ -47,7 +47,7 @@ class Traversor():
         self.fix(1 if step > 0 else -1)
 
     def run_charcoal(self):
-        os.system(f'char-coal query "{self.bank[self.i]}"')
+        os.system(f'charcoal query "{self.bank[self.i]}"')
 
     def save(self):
         with open(self.known_path, 'w') as f:
