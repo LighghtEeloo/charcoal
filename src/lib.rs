@@ -5,12 +5,15 @@
 pub mod app;
 pub mod word;
 
-pub use app::builder::AppBuilder;
-pub use app::cache::Cache;
-pub use app::cli::{Cli, Commands};
-pub use app::config::Config;
-pub use app::App;
-pub use word::speech::Speech;
-pub use word::{Acquire, PPrint};
-pub use word::{Answer, Question};
-pub use word::frontend::{ExactQuery, SingleEntry};
+pub use app::{
+    builder::AppBuilder,
+    cache::Cache,
+    cli::{Cli, Commands},
+    config::Config,
+    App,
+};
+pub use word::{
+    frontend::{ExactQuery, SingleEntry},
+    speech::Speech,
+    Acquire, Answer, PPrint, Question,
+};

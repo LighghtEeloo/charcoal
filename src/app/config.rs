@@ -1,6 +1,6 @@
 use super::cli::{QueryArgs, Toggle};
 use serde::{Deserialize, Serialize};
-use std::{fs, io, path::PathBuf};
+use std::{fs, path::PathBuf};
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {
@@ -39,7 +39,7 @@ impl Config {
             speak: false,
         }
     }
-    pub fn of_file(path: PathBuf) -> io::Result<Self> {
+    pub fn of_file(path: PathBuf) -> anyhow::Result<Self> {
         let content = fs::read_to_string(&path)?;
         let config = toml::from_str(&content)?;
         Ok(Self { path, ..config })
