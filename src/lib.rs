@@ -13,7 +13,5 @@ pub use app::{
     App,
 };
 pub use word::{
-    frontend::{ExactQuery, SingleEntry},
-    speech::Speech,
-    Acquire, Answer, PPrint, Question,
+    frontend::SingleEntry, speech::Speech, Acquire, Answer, ExactQuery, PPrint, Question,
 };

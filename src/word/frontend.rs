@@ -31,10 +31,10 @@ impl Answer for SingleEntry {
 }
 
 impl PPrint for SingleEntry {
-    fn pprint(&self, word_query: &impl Question, config: &Config) {
+    fn pprint(&self, question: &impl Question, config: &Config) {
         let normal = &config.normal;
 
-        println!("{}", word_query.word().bright_red());
+        println!("{}", question.word().bright_red());
 
         if normal.with_pronunciation && !self.pronunciation.is_empty() {
             for (accent, pron) in self.pronunciation.iter() {
