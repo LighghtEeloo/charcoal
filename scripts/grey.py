@@ -1,5 +1,25 @@
 #!/usr/bin/env python3
 
+help_header = \
+"""\
+grey - a command-line gre vocabulary assistant
+
+Supports vim-style operations. Utilizes charcoal for word query.
+To start, cd to the location of this program and run `echo "[]" > data/known.json`.
+"""
+
+help_cmds = \
+"""\
+Commands:
+- <ENTER> : step forwards
+- j/k [NUM] : step forwards / backwards by NUM
+- g <NUM> : go to NUM
+- c : mark current word as known
+- h : show help messages
+- w : save progress
+- q/x : quit after save
+"""
+
 import json
 import os
 import time
@@ -49,6 +69,9 @@ class Traversor():
     def run_charcoal(self):
         os.system(f'charcoal query "{self.bank[self.i]}"')
 
+    def run_clear(self):
+        os.system("clear")
+
     def save(self):
         with open(self.known_path, 'w') as f:
             known = list(self.known)
@@ -67,20 +90,25 @@ class Traversor():
 
             if len(cmd) == 0:
                 self.move(1)
-            elif cmd.startswith("g"):
-                self.move_to(num(self.i))
+            elif cmd.startswith("h") or cmd.startswith("?"):
+                self.run_clear()
+                print(help_header)
+                print(help_cmds)
+                input()
             elif cmd.startswith("j"):
                 self.move(num(default=1))
             elif cmd.startswith("k"):
                 self.move(-num(default=1))
+            elif cmd.startswith("g"):
+                self.move_to(num(self.i))
             elif cmd.startswith("c"):
                 self.known.add(self.bank[self.i])
                 self.move(1)
             elif cmd.startswith("w"):
                 self.save()
-                print("(saving)")
+                print("<<< (saving)")
                 time.sleep(0.4)
-            elif cmd.startswith("q"):
+            elif cmd.startswith("q") or cmd.startswith("x"):
                 raise
 
         except:
@@ -91,7 +119,7 @@ class Traversor():
     def main(self):
         self.fix()
         while True:
-            os.system("clear")
+            self.run_clear()
             print(f">>> [{self.i}]")
             self.run_charcoal()
             self.interact()
