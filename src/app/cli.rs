@@ -1,6 +1,8 @@
-use std::path::PathBuf;
-
-use clap::{Args, Parser, Subcommand, ValueEnum};
+mod uses {
+    pub use clap::{Args, Parser, Subcommand, ValueEnum};
+    pub use std::path::PathBuf;
+}
+use uses::*;
 
 #[derive(Parser, Debug)]
 #[clap(version, about, long_about = None)]
