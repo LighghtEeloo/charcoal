@@ -1,5 +1,5 @@
 use crate::{Cache, Config};
-use directories_next::ProjectDirs;
+use directories::ProjectDirs;
 use std::{fs, io, path::PathBuf};
 
 pub struct AppBuilder {

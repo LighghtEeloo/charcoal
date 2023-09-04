@@ -90,7 +90,7 @@ impl Cache {
         let mut path = (dir.as_ref().iter().take(1))
             .map(|s| -> io::Result<_> {
                 if s == "~" {
-                    Ok(directories_next::UserDirs::new()
+                    Ok(directories::UserDirs::new()
                         .ok_or(io::Error::from(io::ErrorKind::Unsupported))?
                         .home_dir()
                         .to_path_buf())
@@ -180,7 +180,6 @@ impl Cache {
                 Ok(())
             })?;
         builder.finish()?;
-        directories_next::UserDirs::new().unwrap().home_dir();
         Ok(())
     }
 }
