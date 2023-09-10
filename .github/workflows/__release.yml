@@ -1,11 +1,11 @@
 name: release
 on:
-  # workflow_dispatch:
-  # push:
-  #   branches:
-  #     - main
-  #   tags:
-  #     - v*
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
 
 env:
   CARGO_INCREMENTAL: 0
@@ -82,14 +82,14 @@ jobs:
       - name: Rename
         shell: bash
         run: |
-          rm -f  "target/${{ matrix.target }}/release/char-coal-${{ matrix.target }}${{ matrix.extension }}"
-          mv "target/${{ matrix.target }}/release/char-coal${{ matrix.extension }}" "target/${{ matrix.target }}/release/char-coal-${{ matrix.target }}${{ matrix.extension }}"
+          rm -f  "target/${{ matrix.target }}/release/charcoal-${{ matrix.target }}${{ matrix.extension }}"
+          mv "target/${{ matrix.target }}/release/charcoal${{ matrix.extension }}" "target/${{ matrix.target }}/release/charcoal-${{ matrix.target }}${{ matrix.extension }}"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
         with:
           name: Charcoal-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/char-coal-${{ matrix.target }}${{ matrix.extension }}
+          path: target/${{ matrix.target }}/release/charcoal-${{ matrix.target }}${{ matrix.extension }}
 
   publish:
     name: publish
