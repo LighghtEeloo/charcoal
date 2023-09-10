@@ -21,11 +21,14 @@ impl Speech {
     }
 
     fn url(word_query: &impl Question) -> anyhow::Result<String> {
-        let code = match word_query.inferred_lang() {
+        let lang = word_query.inferred_lang();
+        let code = match lang {
             Lang::Eng => "en",
             Lang::Fra => "fr",
             Lang::Cmn => "zh_cn",
-            _ => Err(anyhow::anyhow!("Language inferred not supported"))?,
+            // Fixme: add more languages
+            _ => "en",
+            // _ => Err(anyhow::anyhow!("Language inferred ({}) not supported", lang))?,
         };
         Ok(format!(
             "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl={}&q={}",

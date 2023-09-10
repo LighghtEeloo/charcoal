@@ -40,8 +40,8 @@ impl App {
         let word_entry = SingleEntry::query(&word_query, &cache).await?;
 
         if word_entry.not_found() {
-            println!("Word not found.");
-            return Ok(());
+            Suggestion::new(word_query.word()).exec()?;
+            return Ok(())
         }
 
         word_entry.pprint(&word_query, &config);

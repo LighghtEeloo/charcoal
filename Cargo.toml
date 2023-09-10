@@ -38,6 +38,7 @@ tar = "0.4"
 # cli
 clap = { version = "4.0", features = ["derive"] }
 colored = "2.0"
+which = "4.4"
 
 # path management
 directories = "5.0"
@@ -53,6 +54,7 @@ rodio = { version = "0.17", features = ["symphonia-mp3"]}
 
 # language
 whatlang = "0.16"
+didyoumean = "1.1"
 
 [build-dependencies]
 clap = { version = "4.0", features = ["derive"] }
