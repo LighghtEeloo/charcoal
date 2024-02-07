@@ -4,8 +4,8 @@ complete -c charcoal -n "__fish_use_subcommand" -f -a "query" -d 'Query words fr
 complete -c charcoal -n "__fish_use_subcommand" -f -a "edit" -d 'Edit the configuration file'
 complete -c charcoal -n "__fish_use_subcommand" -f -a "cache" -d 'Cache commands'
 complete -c charcoal -n "__fish_use_subcommand" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
-complete -c charcoal -n "__fish_seen_subcommand_from query" -l speak-as -d 'Whether to speak aloud' -r -f -a "{true	True,false	False,flip	Flip}"
-complete -c charcoal -n "__fish_seen_subcommand_from query" -l concise-as -d 'Whether to be concise' -r -f -a "{true	True,false	False,flip	Flip}"
+complete -c charcoal -n "__fish_seen_subcommand_from query" -l speak-as -d 'Whether to speak aloud' -r -f -a "{true	'True',false	'False',flip	'Flip'}"
+complete -c charcoal -n "__fish_seen_subcommand_from query" -l concise-as -d 'Whether to be concise' -r -f -a "{true	'True',false	'False',flip	'Flip'}"
 complete -c charcoal -n "__fish_seen_subcommand_from query" -s s -l speak -d 'Speak aloud'
 complete -c charcoal -n "__fish_seen_subcommand_from query" -s q -l mute -d 'Mute (overloads speak)'
 complete -c charcoal -n "__fish_seen_subcommand_from query" -s c -l concise -d 'Be concise'
