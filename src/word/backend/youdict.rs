@@ -150,9 +150,9 @@ impl Select for Sen {
             word_query.inferred_lang(),
             Lang::Cmn | Lang::Jpn | Lang::Kor
         ) {
-            (western_concat(ori_vec), eastern_concat(trans_vec))
-        } else {
             (eastern_concat(ori_vec), western_concat(trans_vec))
+        } else {
+            (western_concat(ori_vec), eastern_concat(trans_vec))
         };
         Ok((ori, trans))
     }

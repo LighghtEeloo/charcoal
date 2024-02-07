@@ -12,71 +12,71 @@ _charcoal() {
             ",$1")
                 cmd="charcoal"
                 ;;
-            charcoal__dict,cache)
-                cmd="charcoal__dict__cache"
+            charcoal,cache)
+                cmd="charcoal__cache"
                 ;;
-            charcoal__dict,edit)
-                cmd="charcoal__dict__edit"
+            charcoal,edit)
+                cmd="charcoal__edit"
                 ;;
-            charcoal__dict,help)
-                cmd="charcoal__dict__help"
+            charcoal,help)
+                cmd="charcoal__help"
                 ;;
-            charcoal__dict,query)
-                cmd="charcoal__dict__query"
+            charcoal,query)
+                cmd="charcoal__query"
                 ;;
-            charcoal__dict__cache,clean)
-                cmd="charcoal__dict__cache__clean"
+            charcoal__cache,clean)
+                cmd="charcoal__cache__clean"
                 ;;
-            charcoal__dict__cache,export)
-                cmd="charcoal__dict__cache__export"
+            charcoal__cache,export)
+                cmd="charcoal__cache__export"
                 ;;
-            charcoal__dict__cache,help)
-                cmd="charcoal__dict__cache__help"
+            charcoal__cache,help)
+                cmd="charcoal__cache__help"
                 ;;
-            charcoal__dict__cache,import)
-                cmd="charcoal__dict__cache__import"
+            charcoal__cache,import)
+                cmd="charcoal__cache__import"
                 ;;
-            charcoal__dict__cache,show)
-                cmd="charcoal__dict__cache__show"
+            charcoal__cache,show)
+                cmd="charcoal__cache__show"
                 ;;
-            charcoal__dict__cache__help,clean)
-                cmd="charcoal__dict__cache__help__clean"
+            charcoal__cache__help,clean)
+                cmd="charcoal__cache__help__clean"
                 ;;
-            charcoal__dict__cache__help,export)
-                cmd="charcoal__dict__cache__help__export"
+            charcoal__cache__help,export)
+                cmd="charcoal__cache__help__export"
                 ;;
-            charcoal__dict__cache__help,help)
-                cmd="charcoal__dict__cache__help__help"
+            charcoal__cache__help,help)
+                cmd="charcoal__cache__help__help"
                 ;;
-            charcoal__dict__cache__help,import)
-                cmd="charcoal__dict__cache__help__import"
+            charcoal__cache__help,import)
+                cmd="charcoal__cache__help__import"
                 ;;
-            charcoal__dict__cache__help,show)
-                cmd="charcoal__dict__cache__help__show"
+            charcoal__cache__help,show)
+                cmd="charcoal__cache__help__show"
                 ;;
-            charcoal__dict__help,cache)
-                cmd="charcoal__dict__help__cache"
+            charcoal__help,cache)
+                cmd="charcoal__help__cache"
                 ;;
-            charcoal__dict__help,edit)
-                cmd="charcoal__dict__help__edit"
+            charcoal__help,edit)
+                cmd="charcoal__help__edit"
                 ;;
-            charcoal__dict__help,help)
-                cmd="charcoal__dict__help__help"
+            charcoal__help,help)
+                cmd="charcoal__help__help"
                 ;;
-            charcoal__dict__help,query)
-                cmd="charcoal__dict__help__query"
+            charcoal__help,query)
+                cmd="charcoal__help__query"
                 ;;
-            charcoal__dict__help__cache,clean)
-                cmd="charcoal__dict__help__cache__clean"
+            charcoal__help__cache,clean)
+                cmd="charcoal__help__cache__clean"
                 ;;
-            charcoal__dict__help__cache,export)
-                cmd="charcoal__dict__help__cache__export"
+            charcoal__help__cache,export)
+                cmd="charcoal__help__cache__export"
                 ;;
-            charcoal__dict__help__cache,import)
-                cmd="charcoal__dict__help__cache__import"
+            charcoal__help__cache,import)
+                cmd="charcoal__help__cache__import"
                 ;;
-            charcoal__dict__help__cache,show)
-                cmd="charcoal__dict__help__cache__show"
+            charcoal__help__cache,show)
+                cmd="charcoal__help__cache__show"
                 ;;
             *)
                 ;;
@@ -417,4 +417,8 @@ _charcoal() {
     esac
 }
 
-complete -F _charcoal -o bashdefault -o default charcoal
+if [[ "${BASH_VERSINFO[0]}" -eq 4 && "${BASH_VERSINFO[1]}" -ge 4 || "${BASH_VERSINFO[0]}" -gt 4 ]]; then
+    complete -F _charcoal -o nosort -o bashdefault -o default charcoal
+else
+    complete -F _charcoal -o bashdefault -o default charcoal
+fi
