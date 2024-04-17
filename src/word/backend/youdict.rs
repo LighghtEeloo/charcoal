@@ -147,7 +147,7 @@ impl Select for Sen {
         let trans_vec = extract_to_vec("No trans found in sentence");
 
         let (ori, trans) = if matches!(
-            word_query.inferred_lang(),
+            word_query.lang(),
             Lang::Cmn | Lang::Jpn | Lang::Kor
         ) {
             (eastern_concat(ori_vec), western_concat(trans_vec))

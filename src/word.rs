@@ -10,7 +10,7 @@ pub use backend::*;
 
 pub trait Question {
     fn word(&self) -> String;
-    fn inferred_lang(&self) -> Lang;
+    fn lang(&self) -> Lang;
 }
 pub trait Answer {
     fn not_found(&self) -> bool;
@@ -61,7 +61,7 @@ impl Question for ExactQuery {
     fn word(&self) -> String {
         self.word.clone()
     }
-    fn inferred_lang(&self) -> Lang {
+    fn lang(&self) -> Lang {
         self.lang
     }
 }

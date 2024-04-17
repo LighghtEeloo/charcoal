@@ -21,7 +21,7 @@ impl Speech {
     }
 
     fn url(word_query: &impl Question) -> anyhow::Result<String> {
-        let lang = word_query.inferred_lang();
+        let lang = word_query.lang();
         let code = match lang {
             Lang::Eng => "en",
             Lang::Fra => "fr",
