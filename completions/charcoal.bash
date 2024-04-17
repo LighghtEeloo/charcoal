@@ -393,7 +393,7 @@ _charcoal() {
             return 0
             ;;
         charcoal__query)
-            opts="-s -q -c -h --speak --mute --speak-as --concise --concise-as --help [QUERY]..."
+            opts="-s -q -c -h --speak --mute --speak-as --refresh --concise --concise-as --help [QUERY]..."
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0

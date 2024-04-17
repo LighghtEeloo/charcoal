@@ -27,7 +27,7 @@ impl App {
         config.apply(&mut args);
 
         let word_query = {
-            let word_query = ExactQuery::new(args.query());
+            let word_query = ExactQuery::new(args.query(), config.lang, args.refresh);
             if let Some(word_query) = word_query {
                 word_query
             } else {
@@ -41,7 +41,7 @@ impl App {
 
         if word_entry.not_found() {
             Suggestion::new(word_query.word()).exec()?;
-            return Ok(())
+            return Ok(());
         }
 
         word_entry.pprint(&word_query, &config);

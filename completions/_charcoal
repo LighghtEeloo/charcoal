@@ -40,6 +40,7 @@ flip\:"Flip"))' \
 '--speak[Speak aloud]' \
 '-q[Mute (overloads speak)]' \
 '--mute[Mute (overloads speak)]' \
+'--refresh[Whether to refresh cache]' \
 '-c[Be concise]' \
 '--concise[Be concise]' \
 '-h[Print help (see more with '\''--help'\'')]' \

@@ -8,6 +8,7 @@ complete -c charcoal -n "__fish_seen_subcommand_from query" -l speak-as -d 'Whet
 complete -c charcoal -n "__fish_seen_subcommand_from query" -l concise-as -d 'Whether to be concise' -r -f -a "{true	'True',false	'False',flip	'Flip'}"
 complete -c charcoal -n "__fish_seen_subcommand_from query" -s s -l speak -d 'Speak aloud'
 complete -c charcoal -n "__fish_seen_subcommand_from query" -s q -l mute -d 'Mute (overloads speak)'
+complete -c charcoal -n "__fish_seen_subcommand_from query" -l refresh -d 'Whether to refresh cache'
 complete -c charcoal -n "__fish_seen_subcommand_from query" -s c -l concise -d 'Be concise'
 complete -c charcoal -n "__fish_seen_subcommand_from query" -s h -l help -d 'Print help (see more with \'--help\')'
 complete -c charcoal -n "__fish_seen_subcommand_from edit" -l reset -d 'A fresh start'

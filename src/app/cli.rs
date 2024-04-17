@@ -47,6 +47,9 @@ pub struct QueryArgs {
     /// Whether to speak aloud
     #[clap(value_parser, long)]
     pub speak_as: Option<Toggle>,
+    /// Whether to refresh cache
+    #[clap(value_parser, long)]
+    pub refresh: bool,
     /// Be concise
     #[clap(value_parser, short, long)]
     pub concise: bool,

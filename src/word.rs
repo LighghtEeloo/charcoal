@@ -40,15 +40,20 @@ pub trait PPrint: Answer {
 pub struct ExactQuery {
     word: String,
     lang: Lang,
+    refresh: bool,
 }
 
 impl<'a> ExactQuery {
-    pub fn new(word: String) -> Option<Self> {
+    pub fn new(word: String, lang: Lang, refresh: bool) -> Option<Self> {
         if word.is_empty() {
             return None;
         }
-        let lang = whatlang::detect(&word).map_or(Lang::Eng, |info| info.lang());
-        Some(Self { word, lang })
+        // let lang = whatlang::detect(&word).map_or(Lang::Eng, |info| info.lang());
+        Some(Self {
+            word,
+            lang,
+            refresh,
+        })
     }
 }
 

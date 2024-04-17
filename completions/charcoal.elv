@@ -34,6 +34,7 @@ set edit:completion:arg-completer[charcoal] = {|@words|
             cand --speak 'Speak aloud'
             cand -q 'Mute (overloads speak)'
             cand --mute 'Mute (overloads speak)'
+            cand --refresh 'Whether to refresh cache'
             cand -c 'Be concise'
             cand --concise 'Be concise'
             cand -h 'Print help (see more with ''--help'')'

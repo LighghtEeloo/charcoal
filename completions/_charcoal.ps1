@@ -38,6 +38,7 @@ Register-ArgumentCompleter -Native -CommandName 'charcoal' -ScriptBlock {
             [CompletionResult]::new('--speak', 'speak', [CompletionResultType]::ParameterName, 'Speak aloud')
             [CompletionResult]::new('-q', 'q', [CompletionResultType]::ParameterName, 'Mute (overloads speak)')
             [CompletionResult]::new('--mute', 'mute', [CompletionResultType]::ParameterName, 'Mute (overloads speak)')
+            [CompletionResult]::new('--refresh', 'refresh', [CompletionResultType]::ParameterName, 'Whether to refresh cache')
             [CompletionResult]::new('-c', 'c', [CompletionResultType]::ParameterName, 'Be concise')
             [CompletionResult]::new('--concise', 'concise', [CompletionResultType]::ParameterName, 'Be concise')
             [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help (see more with ''--help'')')

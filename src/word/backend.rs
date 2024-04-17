@@ -16,6 +16,9 @@ impl<'a> Acquire for QueryCache<'a> {
     type WordQuery = ExactQuery;
     type WordEntry = SingleEntry;
     fn acquire(self, word_query: &ExactQuery) -> anyhow::Result<SingleEntry> {
+        if word_query.refresh {
+            anyhow::bail!("Force refreshing the cache.")
+        }
         let file = self.cache.query(word_query.word(), "bin")?;
         let entry = bincode::deserialize_from(file)?;
         Ok(entry)

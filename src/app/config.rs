@@ -1,12 +1,14 @@
 use super::cli::{QueryArgs, Toggle};
 use serde::{Deserialize, Serialize};
 use std::{fs, path::PathBuf};
+use whatlang::Lang;
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {
     #[serde(skip)]
     pub path: PathBuf,
     pub main_mode: MainMode,
+    pub lang: Lang,
     pub speak: bool,
     #[serde(rename = "Normal")]
     pub normal: Normal,
@@ -31,12 +33,13 @@ impl Config {
         Config {
             path,
             main_mode: MainMode::Normal,
+            lang: Lang::Eng,
+            speak: false,
             normal: Normal {
                 with_pronunciation: true,
                 with_variants: true,
                 with_sentence: true,
             },
-            speak: false,
         }
     }
     pub fn of_file(path: PathBuf) -> anyhow::Result<Self> {
