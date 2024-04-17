@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.6 - 0.2.8
+- Introduce `dym` for error correction.
+- Fix wrong whitespaces.
+
 ## 0.2.5
 - Bump. Change crate name to `charcoal-dict`.
 
