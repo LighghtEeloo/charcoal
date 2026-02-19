@@ -29,6 +29,8 @@
 
           buildInputs = [
             pkgs.openssl
+          ] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
+            pkgs.alsa-lib
           ];
 
           meta = with pkgs.lib; {
