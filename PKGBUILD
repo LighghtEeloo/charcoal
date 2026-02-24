@@ -1,8 +1,8 @@
 # Maintainer: LitiaEeloo <litiaeeloo@gmail.com>
 
 pkgname=charcoal
-pkgver=0.2.8
-pkgrel=2
+pkgver=0.3.2
+pkgrel=1
 pkgdesc="Charcoal, a command line dictionary"
 arch=('x86_64')
 reponame=charcoal
