@@ -7,7 +7,7 @@ An alternative to wudao-dict. With colorized output and optional speech.
 Arch (-ish):
 
 ```sh
-yay -S charcoal
+paru -S charcoal-dict-bin
 ```
 
 Brew:
@@ -24,7 +24,7 @@ cargo install charcoal-dict
 
 ### Small Tips Ahead
 
-Aliasing common command to `chr`, `wd` or anything shorter is recommended (`cc` if you don't mind?)
+Aliasing common command to `chr`, `ww`, `wd`, or anything shorter is recommended (`cc` if you don't mind?)
 
 ```sh
 alias chr="charcoal query -s"
@@ -113,6 +113,10 @@ As a tiny cli tool, `charcoal` can't guarantee 100% cache consistency; however, 
 Only ascii with out space will be saved by name, under `cache` directory, to achieve better compatibility; the rest will be hashed and then saved under `vault` directory.
 
 Both text and audio will be cached.
+
+## Pinor Arts
+
+[Wudao-dict](https://github.com/ChestnutHeng/Wudao-dict), a command line dictionary tool written in Python, inspired me to create `charcoal`.
 
 ## License
 
