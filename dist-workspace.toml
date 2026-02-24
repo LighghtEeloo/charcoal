@@ -21,3 +21,7 @@ install-updater = false
 tap = "LighghtEeloo/homebrew-charcoal"
 # Publish jobs to run in CI
 publish-jobs = ["homebrew"]
+
+[dist.dependencies.apt]
+pkg-config = "*"
+libasound2-dev = "*"
