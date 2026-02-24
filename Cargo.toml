@@ -11,6 +11,12 @@ license = "MIT"
 keywords = ["cli", "search", "translation", "translate"]
 categories = ["command-line-utilities"]
 
+[package.metadata.wix]
+upgrade-guid = "5AF2E0B3-2D87-420D-895A-193FE16A4F31"
+path-guid = "17AF476E-DEA4-48C3-A8AB-ABDF5E7A4506"
+license = false
+eula = false
+
 [[bin]]
 name = "charcoal"
 
@@ -59,3 +65,8 @@ didyoumean = "1.1"
 [build-dependencies]
 clap = { version = "4.0", features = ["derive"] }
 clap_complete = "4"
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
