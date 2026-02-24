@@ -56,7 +56,8 @@ impl Speech {
     }
 
     async fn speak(file: File) -> anyhow::Result<()> {
-        let handle = DeviceSinkBuilder::open_default_sink()?;
+        let mut handle = DeviceSinkBuilder::open_default_sink()?;
+        handle.log_on_drop(false);
         let player = Player::connect_new(handle.mixer());
         let source = Decoder::try_from(file)?;
         player.append(source);
