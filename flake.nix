@@ -25,11 +25,19 @@
 
           nativeBuildInputs = [
             pkgs.pkg-config
+            pkgs.makeWrapper
           ];
 
           buildInputs = [
             pkgs.openssl
+          ] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
+            pkgs.alsa-lib
           ];
+
+          postInstall = ''
+            wrapProgram $out/bin/charcoal \
+              --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.didyoumean ]}
+          '';
 
           meta = with pkgs.lib; {
             description = manifest.description;
