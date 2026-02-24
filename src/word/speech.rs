@@ -1,9 +1,6 @@
 use crate::{Cache, Question};
-use rodio::{Decoder, OutputStream, Sink};
-use std::{
-    fs::File,
-    io::{BufReader, Write},
-};
+use rodio::{Decoder, DeviceSinkBuilder, Player};
+use std::{fs::File, io::Write};
 use whatlang::Lang;
 
 pub struct Speech;
@@ -59,16 +56,11 @@ impl Speech {
     }
 
     async fn speak(file: File) -> anyhow::Result<()> {
-        // rodio
-        // Get a output stream handle to the default physical sound device
-        let (_stream, stream_handle) = OutputStream::try_default()?;
-        let sink = Sink::try_new(&stream_handle)?;
-
-        let file = BufReader::new(file);
-        let source = Decoder::new(file)?;
-        sink.append(source);
-        sink.sleep_until_end();
-
+        let handle = DeviceSinkBuilder::open_default_sink()?;
+        let player = Player::connect_new(handle.mixer());
+        let source = Decoder::try_from(file)?;
+        player.append(source);
+        player.sleep_until_end();
         Ok(())
     }
 }

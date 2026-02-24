@@ -19,8 +19,11 @@ impl<'a> Acquire for QueryCache<'a> {
         if word_query.refresh {
             anyhow::bail!("Force refreshing the cache.")
         }
-        let file = self.cache.query(word_query.word(), "bin")?;
-        let entry = bincode::deserialize_from(file)?;
+        let mut file = self.cache.query(word_query.word(), "bin")?;
+        let mut buf = Vec::new();
+        use std::io::Read;
+        file.read_to_end(&mut buf)?;
+        let entry = wincode::deserialize_from(buf.as_slice())?;
         Ok(entry)
     }
 }
@@ -35,8 +38,12 @@ impl QueryYoudict {
         self, word_query: &ExactQuery, cache: &Cache,
     ) -> anyhow::Result<SingleEntry> {
         let word_entry = self.acquire(word_query)?;
-        let file = cache.store(word_query.word(), "bin")?;
-        bincode::serialize_into(file, &word_entry)?;
+        let mut file = cache.store(word_query.word(), "bin")?;
+        let mut buf = Vec::new();
+        wincode::serialize_into(&mut buf, &word_entry)?;
+        use std::io::Write;
+        file.write_all(&buf)?;
+
         Ok(word_entry)
     }
 }

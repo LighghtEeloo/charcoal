@@ -14,7 +14,7 @@ _charcoal() {
     fi
 
     local context curcontext="$curcontext" state line
-    _arguments "${_arguments_options[@]}" \
+    _arguments "${_arguments_options[@]}" : \
 '-h[Print help]' \
 '--help[Print help]' \
 '-V[Print version]' \
@@ -29,7 +29,7 @@ _charcoal() {
         curcontext="${curcontext%:*:*}:charcoal-command-$line[1]:"
         case $line[1] in
             (query)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '--speak-as=[Whether to speak aloud]:SPEAK_AS:((true\:"True"
 false\:"False"
 flip\:"Flip"))' \
@@ -45,18 +45,18 @@ flip\:"Flip"))' \
 '--concise[Be concise]' \
 '-h[Print help (see more with '\''--help'\'')]' \
 '--help[Print help (see more with '\''--help'\'')]' \
-'*::query -- The word to be queried:' \
+'*::query -- The word to be queried:_default' \
 && ret=0
 ;;
 (edit)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '--reset[A fresh start]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (cache)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '-h[Print help]' \
 '--help[Print help]' \
 ":: :_charcoal__cache_commands" \
@@ -70,33 +70,33 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:charcoal-cache-command-$line[1]:"
         case $line[1] in
             (show)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (clean)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
 ;;
 (import)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '-h[Print help]' \
 '--help[Print help]' \
 ':dir:_files' \
 && ret=0
 ;;
 (export)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '-h[Print help]' \
 '--help[Print help]' \
 ':dir:_files' \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_charcoal__cache__help_commands" \
 "*::: :->help" \
 && ret=0
@@ -108,23 +108,23 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:charcoal-cache-help-command-$line[1]:"
         case $line[1] in
             (show)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (clean)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (import)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (export)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -136,7 +136,7 @@ esac
 esac
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_charcoal__help_commands" \
 "*::: :->help" \
 && ret=0
@@ -148,15 +148,15 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:charcoal-help-command-$line[1]:"
         case $line[1] in
             (query)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (edit)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (cache)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_charcoal__help__cache_commands" \
 "*::: :->cache" \
 && ret=0
@@ -168,19 +168,19 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:charcoal-help-cache-command-$line[1]:"
         case $line[1] in
             (show)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (clean)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (import)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (export)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -188,7 +188,7 @@ _arguments "${_arguments_options[@]}" \
 esac
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -221,55 +221,15 @@ _charcoal__cache_commands() {
     )
     _describe -t commands 'charcoal cache commands' commands "$@"
 }
-(( $+functions[_charcoal__help__cache_commands] )) ||
-_charcoal__help__cache_commands() {
-    local commands; commands=(
-'show:Show cache location' \
-'clean:Clean cache' \
-'import:Import' \
-'export:Export' \
-    )
-    _describe -t commands 'charcoal help cache commands' commands "$@"
-}
 (( $+functions[_charcoal__cache__clean_commands] )) ||
 _charcoal__cache__clean_commands() {
     local commands; commands=()
     _describe -t commands 'charcoal cache clean commands' commands "$@"
 }
-(( $+functions[_charcoal__cache__help__clean_commands] )) ||
-_charcoal__cache__help__clean_commands() {
-    local commands; commands=()
-    _describe -t commands 'charcoal cache help clean commands' commands "$@"
-}
-(( $+functions[_charcoal__help__cache__clean_commands] )) ||
-_charcoal__help__cache__clean_commands() {
-    local commands; commands=()
-    _describe -t commands 'charcoal help cache clean commands' commands "$@"
-}
-(( $+functions[_charcoal__edit_commands] )) ||
-_charcoal__edit_commands() {
-    local commands; commands=()
-    _describe -t commands 'charcoal edit commands' commands "$@"
-}
-(( $+functions[_charcoal__help__edit_commands] )) ||
-_charcoal__help__edit_commands() {
-    local commands; commands=()
-    _describe -t commands 'charcoal help edit commands' commands "$@"
-}
 (( $+functions[_charcoal__cache__export_commands] )) ||
 _charcoal__cache__export_commands() {
     local commands; commands=()
     _describe -t commands 'charcoal cache export commands' commands "$@"
-}
-(( $+functions[_charcoal__cache__help__export_commands] )) ||
-_charcoal__cache__help__export_commands() {
-    local commands; commands=()
-    _describe -t commands 'charcoal cache help export commands' commands "$@"
-}
-(( $+functions[_charcoal__help__cache__export_commands] )) ||
-_charcoal__help__cache__export_commands() {
-    local commands; commands=()
-    _describe -t commands 'charcoal help cache export commands' commands "$@"
 }
 (( $+functions[_charcoal__cache__help_commands] )) ||
 _charcoal__cache__help_commands() {
@@ -282,10 +242,45 @@ _charcoal__cache__help_commands() {
     )
     _describe -t commands 'charcoal cache help commands' commands "$@"
 }
+(( $+functions[_charcoal__cache__help__clean_commands] )) ||
+_charcoal__cache__help__clean_commands() {
+    local commands; commands=()
+    _describe -t commands 'charcoal cache help clean commands' commands "$@"
+}
+(( $+functions[_charcoal__cache__help__export_commands] )) ||
+_charcoal__cache__help__export_commands() {
+    local commands; commands=()
+    _describe -t commands 'charcoal cache help export commands' commands "$@"
+}
 (( $+functions[_charcoal__cache__help__help_commands] )) ||
 _charcoal__cache__help__help_commands() {
     local commands; commands=()
     _describe -t commands 'charcoal cache help help commands' commands "$@"
+}
+(( $+functions[_charcoal__cache__help__import_commands] )) ||
+_charcoal__cache__help__import_commands() {
+    local commands; commands=()
+    _describe -t commands 'charcoal cache help import commands' commands "$@"
+}
+(( $+functions[_charcoal__cache__help__show_commands] )) ||
+_charcoal__cache__help__show_commands() {
+    local commands; commands=()
+    _describe -t commands 'charcoal cache help show commands' commands "$@"
+}
+(( $+functions[_charcoal__cache__import_commands] )) ||
+_charcoal__cache__import_commands() {
+    local commands; commands=()
+    _describe -t commands 'charcoal cache import commands' commands "$@"
+}
+(( $+functions[_charcoal__cache__show_commands] )) ||
+_charcoal__cache__show_commands() {
+    local commands; commands=()
+    _describe -t commands 'charcoal cache show commands' commands "$@"
+}
+(( $+functions[_charcoal__edit_commands] )) ||
+_charcoal__edit_commands() {
+    local commands; commands=()
+    _describe -t commands 'charcoal edit commands' commands "$@"
 }
 (( $+functions[_charcoal__help_commands] )) ||
 _charcoal__help_commands() {
@@ -297,25 +292,45 @@ _charcoal__help_commands() {
     )
     _describe -t commands 'charcoal help commands' commands "$@"
 }
-(( $+functions[_charcoal__help__help_commands] )) ||
-_charcoal__help__help_commands() {
-    local commands; commands=()
-    _describe -t commands 'charcoal help help commands' commands "$@"
+(( $+functions[_charcoal__help__cache_commands] )) ||
+_charcoal__help__cache_commands() {
+    local commands; commands=(
+'show:Show cache location' \
+'clean:Clean cache' \
+'import:Import' \
+'export:Export' \
+    )
+    _describe -t commands 'charcoal help cache commands' commands "$@"
 }
-(( $+functions[_charcoal__cache__help__import_commands] )) ||
-_charcoal__cache__help__import_commands() {
+(( $+functions[_charcoal__help__cache__clean_commands] )) ||
+_charcoal__help__cache__clean_commands() {
     local commands; commands=()
-    _describe -t commands 'charcoal cache help import commands' commands "$@"
+    _describe -t commands 'charcoal help cache clean commands' commands "$@"
 }
-(( $+functions[_charcoal__cache__import_commands] )) ||
-_charcoal__cache__import_commands() {
+(( $+functions[_charcoal__help__cache__export_commands] )) ||
+_charcoal__help__cache__export_commands() {
     local commands; commands=()
-    _describe -t commands 'charcoal cache import commands' commands "$@"
+    _describe -t commands 'charcoal help cache export commands' commands "$@"
 }
 (( $+functions[_charcoal__help__cache__import_commands] )) ||
 _charcoal__help__cache__import_commands() {
     local commands; commands=()
     _describe -t commands 'charcoal help cache import commands' commands "$@"
+}
+(( $+functions[_charcoal__help__cache__show_commands] )) ||
+_charcoal__help__cache__show_commands() {
+    local commands; commands=()
+    _describe -t commands 'charcoal help cache show commands' commands "$@"
+}
+(( $+functions[_charcoal__help__edit_commands] )) ||
+_charcoal__help__edit_commands() {
+    local commands; commands=()
+    _describe -t commands 'charcoal help edit commands' commands "$@"
+}
+(( $+functions[_charcoal__help__help_commands] )) ||
+_charcoal__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'charcoal help help commands' commands "$@"
 }
 (( $+functions[_charcoal__help__query_commands] )) ||
 _charcoal__help__query_commands() {
@@ -326,21 +341,6 @@ _charcoal__help__query_commands() {
 _charcoal__query_commands() {
     local commands; commands=()
     _describe -t commands 'charcoal query commands' commands "$@"
-}
-(( $+functions[_charcoal__cache__help__show_commands] )) ||
-_charcoal__cache__help__show_commands() {
-    local commands; commands=()
-    _describe -t commands 'charcoal cache help show commands' commands "$@"
-}
-(( $+functions[_charcoal__cache__show_commands] )) ||
-_charcoal__cache__show_commands() {
-    local commands; commands=()
-    _describe -t commands 'charcoal cache show commands' commands "$@"
-}
-(( $+functions[_charcoal__help__cache__show_commands] )) ||
-_charcoal__help__cache__show_commands() {
-    local commands; commands=()
-    _describe -t commands 'charcoal help cache show commands' commands "$@"
 }
 
 if [ "$funcstack[1]" = "_charcoal" ]; then

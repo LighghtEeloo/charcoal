@@ -2,8 +2,9 @@ use crate::word::{Answer, Config, PPrint, QueryCache, QueryYoudict, Question};
 use crate::{Acquire, Cache, ExactQuery};
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
+use wincode::{SchemaRead, SchemaWrite};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, SchemaRead, SchemaWrite)]
 pub struct SingleEntry {
     pub pronunciation: Vec<(String, String)>,
     pub brief: Vec<String>,

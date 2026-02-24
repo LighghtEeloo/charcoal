@@ -21,10 +21,10 @@ Register-ArgumentCompleter -Native -CommandName 'charcoal' -ScriptBlock {
 
     $completions = @(switch ($command) {
         'charcoal' {
-            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
-            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
-            [CompletionResult]::new('-V', 'V ', [CompletionResultType]::ParameterName, 'Print version')
-            [CompletionResult]::new('--version', 'version', [CompletionResultType]::ParameterName, 'Print version')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('-V', '-V ', [CompletionResultType]::ParameterName, 'Print version')
+            [CompletionResult]::new('--version', '--version', [CompletionResultType]::ParameterName, 'Print version')
             [CompletionResult]::new('query', 'query', [CompletionResultType]::ParameterValue, 'Query words from online or offline')
             [CompletionResult]::new('edit', 'edit', [CompletionResultType]::ParameterValue, 'Edit the configuration file')
             [CompletionResult]::new('cache', 'cache', [CompletionResultType]::ParameterValue, 'Cache commands')
@@ -32,28 +32,28 @@ Register-ArgumentCompleter -Native -CommandName 'charcoal' -ScriptBlock {
             break
         }
         'charcoal;query' {
-            [CompletionResult]::new('--speak-as', 'speak-as', [CompletionResultType]::ParameterName, 'Whether to speak aloud')
-            [CompletionResult]::new('--concise-as', 'concise-as', [CompletionResultType]::ParameterName, 'Whether to be concise')
-            [CompletionResult]::new('-s', 's', [CompletionResultType]::ParameterName, 'Speak aloud')
-            [CompletionResult]::new('--speak', 'speak', [CompletionResultType]::ParameterName, 'Speak aloud')
-            [CompletionResult]::new('-q', 'q', [CompletionResultType]::ParameterName, 'Mute (overloads speak)')
-            [CompletionResult]::new('--mute', 'mute', [CompletionResultType]::ParameterName, 'Mute (overloads speak)')
-            [CompletionResult]::new('--refresh', 'refresh', [CompletionResultType]::ParameterName, 'Whether to refresh cache')
-            [CompletionResult]::new('-c', 'c', [CompletionResultType]::ParameterName, 'Be concise')
-            [CompletionResult]::new('--concise', 'concise', [CompletionResultType]::ParameterName, 'Be concise')
-            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help (see more with ''--help'')')
-            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help (see more with ''--help'')')
+            [CompletionResult]::new('--speak-as', '--speak-as', [CompletionResultType]::ParameterName, 'Whether to speak aloud')
+            [CompletionResult]::new('--concise-as', '--concise-as', [CompletionResultType]::ParameterName, 'Whether to be concise')
+            [CompletionResult]::new('-s', '-s', [CompletionResultType]::ParameterName, 'Speak aloud')
+            [CompletionResult]::new('--speak', '--speak', [CompletionResultType]::ParameterName, 'Speak aloud')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Mute (overloads speak)')
+            [CompletionResult]::new('--mute', '--mute', [CompletionResultType]::ParameterName, 'Mute (overloads speak)')
+            [CompletionResult]::new('--refresh', '--refresh', [CompletionResultType]::ParameterName, 'Whether to refresh cache')
+            [CompletionResult]::new('-c', '-c', [CompletionResultType]::ParameterName, 'Be concise')
+            [CompletionResult]::new('--concise', '--concise', [CompletionResultType]::ParameterName, 'Be concise')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help (see more with ''--help'')')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help (see more with ''--help'')')
             break
         }
         'charcoal;edit' {
-            [CompletionResult]::new('--reset', 'reset', [CompletionResultType]::ParameterName, 'A fresh start')
-            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
-            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--reset', '--reset', [CompletionResultType]::ParameterName, 'A fresh start')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
             break
         }
         'charcoal;cache' {
-            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
-            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('show', 'show', [CompletionResultType]::ParameterValue, 'Show cache location')
             [CompletionResult]::new('clean', 'clean', [CompletionResultType]::ParameterValue, 'Clean cache')
             [CompletionResult]::new('import', 'import', [CompletionResultType]::ParameterValue, 'Import')
@@ -62,23 +62,23 @@ Register-ArgumentCompleter -Native -CommandName 'charcoal' -ScriptBlock {
             break
         }
         'charcoal;cache;show' {
-            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
-            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
             break
         }
         'charcoal;cache;clean' {
-            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
-            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
             break
         }
         'charcoal;cache;import' {
-            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
-            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
             break
         }
         'charcoal;cache;export' {
-            [CompletionResult]::new('-h', 'h', [CompletionResultType]::ParameterName, 'Print help')
-            [CompletionResult]::new('--help', 'help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
             break
         }
         'charcoal;cache;help' {
