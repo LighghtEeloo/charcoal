@@ -44,11 +44,13 @@
             homepage = manifest.homepage;
             license = licenses.mit;
             maintainers = [ ];
+            mainProgram = "charcoal";
           };
         };
 
-        apps.default = flake-utils.lib.mkApp {
-          drv = self.packages.${system}.default;
+        apps.default = {
+          type = "app";
+          program = "${self.packages.${system}.default}/bin/charcoal";
         };
 
         devShells.default = pkgs.mkShell {
