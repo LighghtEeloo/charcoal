@@ -44,6 +44,7 @@
             homepage = manifest.homepage;
             license = licenses.mit;
             maintainers = [ ];
+            mainProgram = "charcoal";
           };
         };
 
