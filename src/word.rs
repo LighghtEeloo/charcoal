@@ -1,5 +1,6 @@
 mod backend;
 pub mod frontend;
+mod http;
 pub mod speech;
 
 use crate::Config;
@@ -11,6 +12,9 @@ pub use backend::*;
 pub trait Question {
     fn word(&self) -> String;
     fn lang(&self) -> Lang;
+    fn refresh(&self) -> bool {
+        false
+    }
 }
 pub trait Answer {
     fn not_found(&self) -> bool;
@@ -63,5 +67,8 @@ impl Question for ExactQuery {
     }
     fn lang(&self) -> Lang {
         self.lang
+    }
+    fn refresh(&self) -> bool {
+        self.refresh
     }
 }

@@ -16,8 +16,20 @@ pub struct SingleEntry {
 impl SingleEntry {
     /// Query a word first from cache and then from the web
     pub async fn query(word_query: &ExactQuery, cache: &Cache) -> anyhow::Result<Self> {
-        (QueryCache::new(cache).acquire(word_query))
-            .or_else(|_err| QueryYoudict::new().query_and_store(word_query, cache))
+        if !word_query.refresh() {
+            match QueryCache::new(cache).acquire(word_query) {
+                Ok(entry) => return Ok(entry),
+                Err(err) => {
+                    if !err
+                        .downcast_ref::<std::io::Error>()
+                        .is_some_and(|err| err.kind() == std::io::ErrorKind::NotFound)
+                    {
+                        log::warn!("Ignoring unavailable dictionary cache: {err:#}");
+                    }
+                }
+            }
+        }
+        QueryYoudict::new().query_and_store(word_query, cache)
     }
 }
 

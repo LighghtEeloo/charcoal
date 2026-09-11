@@ -1,5 +1,5 @@
 use crate::word::{Acquire, QueryYoudict, Request, Select};
-use crate::{ExactQuery, Question, SingleEntry};
+use crate::{Answer, ExactQuery, Question, SingleEntry};
 use scraper::{ElementRef, Html, Selector};
 
 impl Acquire for QueryYoudict {
@@ -7,26 +7,66 @@ impl Acquire for QueryYoudict {
     type WordEntry = SingleEntry;
     fn acquire(self, word_query: &ExactQuery) -> anyhow::Result<SingleEntry> {
         let doc = self.request(word_query)?;
-        QueryYoudict::select(doc.root_element(), word_query)
+        QueryYoudict::parse_document(&doc, word_query)
     }
 }
 
 impl Request for QueryYoudict {
     type WordQuery = ExactQuery;
     fn request(self, word_query: &ExactQuery) -> anyhow::Result<Html> {
-        async fn get_html(url: impl AsRef<str> + reqwest::IntoUrl) -> anyhow::Result<String> {
-            let body = reqwest::get(url).await?.text().await?;
-            Ok(body)
-        }
-        let youdao_dict_url = url::Url::parse(&format!(
-            "http://dict.youdao.com/search?q={}",
-            word_query.word()
+        let url = Self::url(word_query)?;
+        let bytes = futures::executor::block_on(crate::word::http::get(
+            &crate::word::http::client()?,
+            url,
         ))?;
-
-        let xml = futures::executor::block_on(async { get_html(youdao_dict_url).await })?;
-        let doc = scraper::Html::parse_document(&xml);
+        let text = String::from_utf8(bytes)?;
+        let doc = Html::parse_document(&text);
 
         Ok(doc)
+    }
+}
+
+#[derive(Debug)]
+pub struct UnexpectedPage;
+
+impl std::fmt::Display for UnexpectedPage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(
+            "Unrecognized dictionary response: the page may have changed or require verification",
+        )
+    }
+}
+impl std::error::Error for UnexpectedPage {}
+
+impl QueryYoudict {
+    fn url(query: &ExactQuery) -> anyhow::Result<url::Url> {
+        let mut url = url::Url::parse("https://dict.youdao.com/search")?;
+        url.query_pairs_mut().append_pair("q", &query.word());
+        Ok(url)
+    }
+
+    fn parse_document(doc: &Html, query: &ExactQuery) -> anyhow::Result<SingleEntry> {
+        let entry = Self::select(doc.root_element(), query)?;
+        if entry.not_found() {
+            // Observed no-result pages contain only the article placeholder and scripts.
+            // Unknown dictionary sections must not be mistaken for missing words.
+            let results = Selector::parse("#results-contents").unwrap();
+            let known_empty = doc.select(&results).next().is_some_and(|root| {
+                let mut article = false;
+                for child in root.child_elements() {
+                    match (child.value().name(), child.value().attr("id")) {
+                        (_, Some("wordArticle")) => article = true,
+                        ("script", _) => {}
+                        _ => return false,
+                    }
+                }
+                article
+            });
+            if !known_empty {
+                return Err(UnexpectedPage.into());
+            }
+        }
+        Ok(entry)
     }
 }
 
@@ -145,6 +185,45 @@ fn trim_str(t: &str) -> Option<String> {
 mod tests {
     use super::*;
     use whatlang::Lang;
+
+    #[test]
+    fn query_parameters_preserve_special_characters() {
+        let query = ExactQuery::new("C++ & x=1#tail".into(), Lang::Eng, false).unwrap();
+        let url = QueryYoudict::url(&query).unwrap();
+        assert_eq!(url.scheme(), "https");
+        assert_eq!(
+            url.query_pairs().collect::<Vec<_>>(),
+            [("q".into(), "C++ & x=1#tail".into())]
+        );
+        assert!(url.fragment().is_none());
+    }
+
+    #[test]
+    fn unknown_and_verification_pages_are_errors() {
+        let query = ExactQuery::new("hello".into(), Lang::Eng, false).unwrap();
+        for html in [
+            "<html>Please verify your request</html>",
+            "<div id='results-contents'><section id='new-layout'>Definition</section></div>",
+            "<div id='phrsListTab'></div>",
+        ] {
+            let error =
+                QueryYoudict::parse_document(&Html::parse_document(html), &query).unwrap_err();
+            assert!(error.is::<UnexpectedPage>());
+        }
+    }
+
+    #[test]
+    fn recognized_empty_results_are_not_found() {
+        let query = ExactQuery::new("unknown".into(), Lang::Eng, false).unwrap();
+        let doc = Html::parse_document(
+            "<div id='results-contents'><div id='wordArticle' class='trans-wrapper trans-tab'></div><script></script></div>",
+        );
+        assert!(
+            QueryYoudict::parse_document(&doc, &query)
+                .unwrap()
+                .not_found()
+        );
+    }
 
     #[test]
     fn chinese_examples_preserve_spacing_regardless_of_configured_language() {

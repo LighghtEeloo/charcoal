@@ -49,7 +49,12 @@ impl AppBuilder {
         let ensure = |dir| -> io::Result<PathBuf> {
             let mut pathbuf = self.project_dirs.cache_dir().to_owned();
             pathbuf.push(dir);
-            fs::create_dir_all(&pathbuf)?;
+            if let Err(err) = fs::create_dir_all(&pathbuf) {
+                log::warn!(
+                    "Failed to initialize cache directory {}: {err}",
+                    pathbuf.display()
+                );
+            }
             Ok(pathbuf)
         };
         let cache_dir = ensure(self.cache_dir)?;
