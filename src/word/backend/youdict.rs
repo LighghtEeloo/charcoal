@@ -1,7 +1,6 @@
 use crate::word::{Acquire, QueryYoudict, Request, Select};
 use crate::{ExactQuery, Question, SingleEntry};
 use scraper::{ElementRef, Html, Selector};
-use whatlang::Lang;
 
 impl Acquire for QueryYoudict {
     type WordQuery = ExactQuery;
@@ -106,54 +105,29 @@ impl Select for Sentence {
 }
 
 struct Sen;
-const PUNCTUATORS: &[char; 10] = &['.', ',', '\"', '\'', '?', '!', ':', '-', '<', '>'];
 
 impl Select for Sen {
     type WordQuery = ExactQuery;
     type Target = (String, String);
 
-    fn select(elem: ElementRef, word_query: &ExactQuery) -> anyhow::Result<Self::Target> {
+    fn select(elem: ElementRef, _word_query: &ExactQuery) -> anyhow::Result<Self::Target> {
         let sel = Selector::parse("p").unwrap();
         let mut iter = elem.select(&sel);
 
-        let mut extract_to_vec = |msg| -> Vec<String> {
-            iter.next()
-                .expect(msg)
+        let mut extract = |msg| -> anyhow::Result<String> {
+            let paragraph = iter.next().ok_or_else(|| anyhow::anyhow!("{msg}"))?;
+            // Inline elements may split words or contain the spaces between them.
+            // Preserve those boundaries before collapsing HTML whitespace.
+            Ok(paragraph
                 .text()
-                .filter_map(trim_str)
-                .collect()
+                .collect::<String>()
+                .split_whitespace()
+                .collect::<Vec<_>>()
+                .join(" "))
         };
 
-        fn western_concat(vec: Vec<String>) -> String {
-            let mut ori = String::new();
-            let mut ori_iter = vec.into_iter();
-            if let Some(s) = ori_iter.next() {
-                ori.push_str(&s)
-            }
-            for mut s in ori_iter {
-                if !s.starts_with(PUNCTUATORS) {
-                    s.insert(0, ' ')
-                }
-                ori.push_str(&s)
-            }
-            ori
-        }
-
-        fn eastern_concat(vec: Vec<String>) -> String {
-            vec.join("")
-        }
-
-        let ori_vec = extract_to_vec("No ori found in sentence");
-        let trans_vec = extract_to_vec("No trans found in sentence");
-
-        let (ori, trans) = if matches!(
-            word_query.lang(),
-            Lang::Cmn | Lang::Jpn | Lang::Kor
-        ) {
-            (eastern_concat(ori_vec), western_concat(trans_vec))
-        } else {
-            (western_concat(ori_vec), eastern_concat(trans_vec))
-        };
+        let ori = extract("No ori found in sentence")?;
+        let trans = extract("No trans found in sentence")?;
         Ok((ori, trans))
     }
 }
@@ -164,5 +138,65 @@ fn trim_str(t: &str) -> Option<String> {
         None
     } else {
         Some(t.to_owned())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use whatlang::Lang;
+
+    #[test]
+    fn chinese_examples_preserve_spacing_regardless_of_configured_language() {
+        let doc = Html::parse_document(include_str!("fixtures/qingxi.html"));
+        let expected = vec![
+            (
+                "从空中看去，那座庙宇清晰可辨。".to_owned(),
+                "The temple was clearly visible from the air.".to_owned(),
+            ),
+            (
+                "她给了我清晰而准确的指示。".to_owned(),
+                "She gave me clear and precise directions.".to_owned(),
+            ),
+            (
+                "电话里的声音清晰洪亮。".to_owned(),
+                "The voice on the phone was clear and strong.".to_owned(),
+            ),
+        ];
+
+        for lang in [Lang::Eng, Lang::Cmn, Lang::Jpn, Lang::Kor] {
+            let query = ExactQuery::new("清晰".to_owned(), lang, false).unwrap();
+            let entry = QueryYoudict::select(doc.root_element(), &query).unwrap();
+            assert_eq!(entry.sentence, expected);
+        }
+    }
+
+    #[test]
+    fn english_examples_preserve_inline_words_punctuation_and_mixed_text() {
+        let doc = Html::parse_fragment(
+            r#"<li>
+                <p>
+                    The <b>clear</b>est <span>sign</span>:&#9; "<b>你好</b>" (it's <b>clear</b>).
+                </p>
+                <p>最<b>清晰</b>的标志：<span>Hello world</span>。</p>
+            </li>"#,
+        );
+        let query = ExactQuery::new("clear".to_owned(), Lang::Eng, false).unwrap();
+        let pair = Sen::select(doc.root_element(), &query).unwrap();
+        assert_eq!(pair.0, "The clearest sign: \"你好\" (it's clear).");
+        assert_eq!(pair.1, "最清晰的标志：Hello world。");
+    }
+
+    #[test]
+    fn incomplete_examples_are_skipped() {
+        let doc = Html::parse_fragment(
+            r#"<div id="bilingual" class="trans-container"><li><p>Incomplete</p></li></div>"#,
+        );
+        let query = ExactQuery::new("clear".to_owned(), Lang::Eng, false).unwrap();
+        assert!(
+            Sentence::select(doc.root_element(), &query)
+                .unwrap()
+                .is_empty()
+        );
     }
 }
