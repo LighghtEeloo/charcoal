@@ -108,11 +108,10 @@ alias chr="RUST_LOG=info target/debug/charcoal query -s"
 
 ## Caching Strategy
 
-As a tiny cli tool, `charcoal` can't guarantee 100% cache consistency; however, its caching strategy is delicately designed such that inconsistency is rare and of little harm.
+Text and audio caches use SHA-256 filenames derived from the query, language, provider, and format version. Writes replace complete files atomically, so interrupted or concurrent queries do not expose partial entries.
 
-Only ascii with out space will be saved by name, under `cache` directory, to achieve better compatibility; the rest will be hashed and then saved under `vault` directory.
+Older on-disk cache entries are not reused because they lack language and format metadata. They can be removed with `charcoal cache clean`; queries repopulate the cache as needed. Legacy word-named exports can still be imported as English entries. New exports preserve the complete cache identity.
 
-Both text and audio will be cached.
 
 ## Pinor Arts
 

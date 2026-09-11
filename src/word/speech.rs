@@ -1,6 +1,7 @@
+use crate::app::cache::CacheKey;
 use crate::{Cache, Question};
 use rodio::{Decoder, DeviceSinkBuilder, Player};
-use std::{fs::File, io::Write};
+use std::fs::File;
 use whatlang::Lang;
 
 pub struct Speech;
@@ -35,20 +36,19 @@ impl Speech {
     }
 
     async fn store(word_query: &impl Question, cache: &Cache) -> anyhow::Result<File> {
-        let word = word_query.word();
-        let file = (cache.query(&word, "mp3")).or_else(|_| -> anyhow::Result<File> {
+        let key = CacheKey::new(&word_query.word(), word_query.lang(), "google-tts", 1);
+        let file = (cache.query(&key, "mp3")).or_else(|_| -> anyhow::Result<File> {
             let url = Speech::url(word_query);
             futures::executor::block_on(async {
                 // request
                 let res = reqwest::get(url?).await?;
 
                 // write
-                let mut file = cache.store(&word, "mp3")?;
                 let bytes = res.bytes().await?;
-                file.write_all(&bytes)?;
+                cache.store(&key, "mp3", &bytes)?;
 
                 // read again to avoid overflow
-                let file = cache.query(word, "mp3")?;
+                let file = cache.query(&key, "mp3")?;
                 Ok(file)
             })
         })?;

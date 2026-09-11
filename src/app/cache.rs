@@ -1,10 +1,10 @@
+use sha2::{Digest, Sha256};
 use std::{
-    collections::hash_map::DefaultHasher,
-    fs::{self, File, OpenOptions},
-    hash::{Hash, Hasher},
-    io,
+    fs::{self, File},
+    io::{self, Write},
     path::{Path, PathBuf},
 };
+use whatlang::Lang;
 
 #[derive(Clone)]
 pub struct Cache {
@@ -13,40 +13,35 @@ pub struct Cache {
     tmp_dir: PathBuf,
 }
 
-enum CacheFile {
-    Normal(u8, String),
-    Absurd(u64),
-}
+/// A versioned cache identity, independent of filesystem path syntax.
+#[derive(Clone, Debug)]
+pub struct CacheKey(String);
 
-impl CacheFile {
-    fn str_hash(s: impl AsRef<str>) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        s.as_ref().hash(&mut hasher);
-        hasher.finish()
+impl CacheKey {
+    pub fn new(word: &str, language: Lang, provider: &str, version: u32) -> Self {
+        // Length-delimited JSON fields avoid ambiguous concatenated identities.
+        let identity = serde_json::to_vec(&(version, provider, language, word))
+            .expect("Cache identity fields must serialize");
+        Self(format!("v1-{:x}", Sha256::digest(identity)))
     }
-    fn generate(s: String) -> Self {
-        let hash_num = CacheFile::str_hash(&s);
-        if s.contains(' ') || !s.is_ascii() {
-            CacheFile::Absurd(hash_num)
+
+    fn from_archive_name(name: &str, suffix: &str) -> io::Result<Self> {
+        if let Some(digest) = name.strip_prefix("v1-") {
+            if digest.len() == 64 && digest.bytes().all(|b| b.is_ascii_hexdigit()) {
+                return Ok(Self(name.to_ascii_lowercase()));
+            }
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Invalid cache digest",
+            ));
+        }
+        // Legacy exports contain raw words and have no language metadata.
+        let provider = if suffix == "bin" {
+            "youdao"
         } else {
-            CacheFile::Normal((hash_num % 256) as u8, s)
-        }
-    }
-    fn consume(self, cache: &Cache, suffix: &'static str) -> io::Result<PathBuf> {
-        match self {
-            CacheFile::Normal(dir, file) => {
-                let mut path = cache.cache_dir.clone();
-                path.push(format!("{:02x}", dir));
-                fs::create_dir_all(&path)?;
-                path.push(format!("{}.{}", file, suffix));
-                Ok(path)
-            }
-            CacheFile::Absurd(file) => {
-                let mut path = cache.vault_dir.clone();
-                path.push(format!("{:x}.{}", file, suffix));
-                Ok(path)
-            }
-        }
+            "google-tts"
+        };
+        Ok(Self::new(name, Lang::Eng, provider, 1))
     }
 }
 
@@ -59,20 +54,33 @@ impl Cache {
         }
     }
 
-    fn get_file_path(&self, word: impl AsRef<str>, suffix: &'static str) -> io::Result<PathBuf> {
-        CacheFile::generate(word.as_ref().to_owned()).consume(self, suffix)
+    fn get_file_path(&self, key: &CacheKey, suffix: &'static str) -> io::Result<PathBuf> {
+        if !matches!(suffix, "bin" | "mp3") {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Unsupported cache format",
+            ));
+        }
+        Ok(self
+            .cache_dir
+            .join(&key.0[3..5])
+            .join(format!("{}.{}", key.0, suffix)))
     }
 
-    pub fn query(&self, word: impl AsRef<str>, suffix: &'static str) -> io::Result<File> {
-        let path = self.get_file_path(&word, suffix)?;
-        let file = OpenOptions::new().read(true).open(path)?;
-        Ok(file)
+    pub fn query(&self, key: &CacheKey, suffix: &'static str) -> io::Result<File> {
+        File::open(self.get_file_path(key, suffix)?)
     }
 
-    pub fn store(&self, word: impl AsRef<str>, suffix: &'static str) -> io::Result<File> {
-        let path = self.get_file_path(&word, suffix)?;
-        let file = OpenOptions::new().create(true).write(true).open(path)?;
-        Ok(file)
+    /// Publish a complete file without exposing partial writes to readers.
+    pub fn store(&self, key: &CacheKey, suffix: &'static str, bytes: &[u8]) -> io::Result<()> {
+        let path = self.get_file_path(key, suffix)?;
+        let parent = path.parent().expect("Cache files have a parent directory");
+        fs::create_dir_all(parent)?;
+        let mut pending = tempfile::NamedTempFile::new_in(parent)?;
+        pending.write_all(bytes)?;
+        pending.as_file().sync_all()?;
+        pending.persist(path).map_err(|err| err.error)?;
+        Ok(())
     }
 
     pub fn show(&self) -> &PathBuf {
@@ -140,7 +148,7 @@ impl Cache {
                     }
                 }
                 src.file_name()
-                    .map(|s| s.to_str().unwrap().to_owned())
+                    .and_then(|s| s.to_str().map(str::to_owned))
                     .map(split_file_at_dot)
                     .ok_or(io::Error::from(io::ErrorKind::InvalidInput))??
             };
@@ -149,9 +157,8 @@ impl Cache {
                 "mp3" => "mp3",
                 _ => Err(io::Error::from(io::ErrorKind::InvalidInput))?,
             };
-            let mut src = OpenOptions::new().read(true).open(src)?;
-            let mut dest = self.store(src_name, src_suffix)?;
-            io::copy(&mut src, &mut dest)?;
+            let key = CacheKey::from_archive_name(&src_name, src_suffix)?;
+            self.store(&key, src_suffix, &fs::read(src)?)?;
         }
         fs::remove_dir_all(&self.tmp_dir)?;
         Ok(())
@@ -181,5 +188,119 @@ impl Cache {
             })?;
         builder.finish()?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Read;
+
+    fn cache(root: &Path) -> Cache {
+        for dir in ["cache", "vault", "tmp"] {
+            fs::create_dir_all(root.join(dir)).unwrap();
+        }
+        Cache::new(root.join("cache"), root.join("vault"), root.join("tmp"))
+    }
+
+    #[test]
+    fn arbitrary_queries_remain_inside_cache() {
+        let root = tempfile::tempdir().unwrap();
+        let cache = cache(root.path());
+        for word in [
+            "../../outside",
+            "/tmp/outside",
+            "C:\\outside",
+            "hello world",
+            "\u{6e05}\u{6670}",
+        ] {
+            let key = CacheKey::new(word, Lang::Eng, "youdao", 1);
+            cache.store(&key, "bin", b"entry").unwrap();
+            let path = cache
+                .get_file_path(&key, "bin")
+                .unwrap()
+                .canonicalize()
+                .unwrap();
+            assert!(path.starts_with(cache.cache_dir.canonicalize().unwrap()));
+        }
+        assert!(!root.path().join("outside.bin").exists());
+    }
+
+    #[test]
+    fn keys_separate_languages_providers_and_versions() {
+        let base = CacheKey::new("hello", Lang::Eng, "youdao", 1);
+        for key in [
+            CacheKey::new("hello", Lang::Fra, "youdao", 1),
+            CacheKey::new("hello", Lang::Eng, "google-tts", 1),
+            CacheKey::new("hello", Lang::Eng, "youdao", 2),
+        ] {
+            assert_ne!(base.0, key.0);
+        }
+        assert_eq!(base.0, CacheKey::new("hello", Lang::Eng, "youdao", 1).0);
+    }
+
+    #[test]
+    fn shorter_writes_replace_the_entire_file() {
+        let root = tempfile::tempdir().unwrap();
+        let cache = cache(root.path());
+        let key = CacheKey::new("hello", Lang::Eng, "youdao", 1);
+        cache.store(&key, "bin", b"long payload").unwrap();
+        cache.store(&key, "bin", b"new").unwrap();
+        let mut actual = Vec::new();
+        cache
+            .query(&key, "bin")
+            .unwrap()
+            .read_to_end(&mut actual)
+            .unwrap();
+        assert_eq!(actual, b"new");
+    }
+
+    #[test]
+    fn concurrent_writes_publish_complete_files() {
+        let root = tempfile::tempdir().unwrap();
+        let cache = cache(root.path());
+        let key = CacheKey::new("hello", Lang::Eng, "youdao", 1);
+        cache.store(&key, "bin", &[0; 8192]).unwrap();
+        std::thread::scope(|scope| {
+            for value in 1..=4 {
+                let cache = &cache;
+                let key = &key;
+                scope.spawn(move || {
+                    for _ in 0..10 {
+                        cache.store(key, "bin", &vec![value; 8192]).unwrap();
+                    }
+                });
+            }
+            for _ in 0..100 {
+                let mut bytes = Vec::new();
+                cache
+                    .query(&key, "bin")
+                    .unwrap()
+                    .read_to_end(&mut bytes)
+                    .unwrap();
+                assert_eq!(bytes.len(), 8192);
+                assert!(bytes.iter().all(|b| *b == bytes[0]));
+            }
+        });
+    }
+
+    #[test]
+    fn archives_preserve_hashed_identities() {
+        let source = tempfile::tempdir().unwrap();
+        let target = tempfile::tempdir().unwrap();
+        let source_cache = cache(source.path());
+        let target_cache = cache(target.path());
+        let key = CacheKey::new("hello world", Lang::Fra, "google-tts", 1);
+        source_cache.store(&key, "mp3", b"audio").unwrap();
+        let archive = source.path().join("export.tar");
+        source_cache.export(archive.clone()).unwrap();
+        target_cache.import(archive).unwrap();
+        let mut actual = Vec::new();
+        target_cache
+            .query(&key, "mp3")
+            .unwrap()
+            .read_to_end(&mut actual)
+            .unwrap();
+        assert_eq!(actual, b"audio");
     }
 }

@@ -1,5 +1,6 @@
 mod youdict;
 
+use crate::app::cache::CacheKey;
 use crate::{Acquire, Cache, ExactQuery, Question, SingleEntry};
 
 pub struct QueryCache<'a> {
@@ -19,7 +20,7 @@ impl<'a> Acquire for QueryCache<'a> {
         if word_query.refresh {
             anyhow::bail!("Force refreshing the cache.")
         }
-        let mut file = self.cache.query(word_query.word(), "bin")?;
+        let mut file = self.cache.query(&word_query.cache_key(), "bin")?;
         let mut buf = Vec::new();
         use std::io::Read;
         file.read_to_end(&mut buf)?;
@@ -38,12 +39,16 @@ impl QueryYoudict {
         self, word_query: &ExactQuery, cache: &Cache,
     ) -> anyhow::Result<SingleEntry> {
         let word_entry = self.acquire(word_query)?;
-        let mut file = cache.store(word_query.word(), "bin")?;
         let mut buf = Vec::new();
         wincode::serialize_into(&mut buf, &word_entry)?;
-        use std::io::Write;
-        file.write_all(&buf)?;
+        cache.store(&word_query.cache_key(), "bin", &buf)?;
 
         Ok(word_entry)
+    }
+}
+
+impl ExactQuery {
+    pub(crate) fn cache_key(&self) -> CacheKey {
+        CacheKey::new(&self.word(), self.lang(), "youdao", 1)
     }
 }
