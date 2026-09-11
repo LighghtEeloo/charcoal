@@ -32,17 +32,29 @@ impl<'a> Acquire for QueryCache<'a> {
     }
 }
 
-pub struct QueryYoudict;
+pub struct QueryYoudict {
+    endpoint: url::Url,
+}
 
 impl QueryYoudict {
     pub fn new() -> Self {
-        Self
+        Self {
+            endpoint: url::Url::parse("https://dict.youdao.com/search")
+                .expect("Valid dictionary endpoint"),
+        }
     }
-    pub fn query_and_store(
+    pub async fn query_and_store(
         self, word_query: &ExactQuery, cache: &Cache,
     ) -> anyhow::Result<SingleEntry> {
-        let word_entry = self.acquire(word_query)?;
-        Self::cache_entry(word_query, cache, &word_entry);
+        let word_entry = self.acquire(word_query).await?;
+        let query = word_query.clone();
+        let cache = cache.clone();
+        let entry = word_entry.clone();
+        if let Err(err) =
+            tokio::task::spawn_blocking(move || Self::cache_entry(&query, &cache, &entry)).await
+        {
+            log::warn!("Dictionary cache task failed: {err}");
+        }
 
         Ok(word_entry)
     }

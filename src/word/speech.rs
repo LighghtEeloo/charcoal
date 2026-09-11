@@ -11,11 +11,19 @@ impl Speech {
     pub async fn query(
         word_query: &impl Question, cache: &Cache, is_speak: bool,
     ) -> anyhow::Result<()> {
-        if is_speak {
-            let file = Speech::store(word_query, cache).await?;
-            Speech::speak(file).await
+        if let Some(audio) = Self::prepare(word_query, cache, is_speak).await? {
+            Self::speak(audio).await?;
+        }
+        Ok(())
+    }
+
+    pub(crate) async fn prepare(
+        query: &impl Question, cache: &Cache, enabled: bool,
+    ) -> anyhow::Result<Option<Cursor<Vec<u8>>>> {
+        if enabled {
+            Ok(Some(Self::store(query, cache).await?))
         } else {
-            Ok(())
+            Ok(None)
         }
     }
 
@@ -42,15 +50,29 @@ impl Speech {
     }
 
     async fn store(word_query: &impl Question, cache: &Cache) -> anyhow::Result<Cursor<Vec<u8>>> {
+        Self::store_at(word_query, cache, Self::url(word_query)?).await
+    }
+
+    async fn store_at(
+        word_query: &impl Question, cache: &Cache, url: url::Url,
+    ) -> anyhow::Result<Cursor<Vec<u8>>> {
         let key = CacheKey::new(&word_query.word(), word_query.lang(), "google-tts", 1);
         if !word_query.refresh() {
-            let cached = || -> anyhow::Result<Vec<u8>> {
+            let cached_key = key.clone();
+            let cached_cache = cache.clone();
+            let cached = move || -> anyhow::Result<Vec<u8>> {
                 let mut bytes = Vec::new();
-                cache.query(&key, "mp3")?.read_to_end(&mut bytes)?;
+                cached_cache
+                    .query(&cached_key, "mp3")?
+                    .read_to_end(&mut bytes)?;
                 Self::validate(&bytes)?;
                 Ok(bytes)
             };
-            match cached() {
+            match tokio::task::spawn_blocking(cached)
+                .await
+                .map_err(anyhow::Error::from)
+                .and_then(|result| result)
+            {
                 Ok(bytes) => return Ok(Cursor::new(bytes)),
                 Err(err) => {
                     if !err
@@ -62,18 +84,26 @@ impl Speech {
                 }
             }
         }
-        let bytes = futures::executor::block_on(crate::word::http::get(
-            &crate::word::http::client()?,
-            Self::url(word_query)?,
-        ))?;
-        Self::validate(&bytes)?;
-        if let Err(err) = cache.store(&key, "mp3", &bytes) {
-            log::warn!("Failed to cache speech audio: {err}");
-        }
-        Ok(Cursor::new(bytes))
+        let bytes = crate::word::http::get(&crate::word::http::client()?, url).await?;
+        let cache = cache.clone();
+        tokio::task::spawn_blocking(move || {
+            Self::validate(&bytes)?;
+            if let Err(err) = cache.store(&key, "mp3", &bytes) {
+                log::warn!("Failed to cache speech audio: {err}");
+            }
+            Ok(Cursor::new(bytes))
+        })
+        .await
+        .context("Speech cache task failed")?
     }
 
-    async fn speak(file: Cursor<Vec<u8>>) -> anyhow::Result<()> {
+    pub(crate) async fn speak(file: Cursor<Vec<u8>>) -> anyhow::Result<()> {
+        tokio::task::spawn_blocking(move || Self::play_blocking(file))
+            .await
+            .context("Speech playback task failed")?
+    }
+
+    fn play_blocking(file: Cursor<Vec<u8>>) -> anyhow::Result<()> {
         let mut handle = DeviceSinkBuilder::open_default_sink()?;
         handle.log_on_drop(false);
         let player = Player::connect_new(handle.mixer());
@@ -88,6 +118,118 @@ impl Speech {
 mod tests {
     use super::*;
     use crate::ExactQuery;
+
+    fn wav() -> Vec<u8> {
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(b"RIFF");
+        bytes.extend_from_slice(&68u32.to_le_bytes());
+        bytes.extend_from_slice(b"WAVEfmt ");
+        bytes.extend_from_slice(&16u32.to_le_bytes());
+        bytes.extend_from_slice(&1u16.to_le_bytes());
+        bytes.extend_from_slice(&1u16.to_le_bytes());
+        bytes.extend_from_slice(&8000u32.to_le_bytes());
+        bytes.extend_from_slice(&16000u32.to_le_bytes());
+        bytes.extend_from_slice(&2u16.to_le_bytes());
+        bytes.extend_from_slice(&16u16.to_le_bytes());
+        bytes.extend_from_slice(b"data");
+        bytes.extend_from_slice(&32u32.to_le_bytes());
+        bytes.extend_from_slice(&[0; 32]);
+        bytes
+    }
+
+    fn cache(root: &std::path::Path) -> Cache {
+        Cache::new(root.join("cache"), root.join("vault"), root.join("tmp"))
+    }
+
+    #[tokio::test]
+    async fn valid_audio_cache_works_without_network_or_playback() {
+        let root = tempfile::tempdir().unwrap();
+        let cache = cache(root.path());
+        let query = ExactQuery::new("hello".into(), Lang::Eng, false).unwrap();
+        let key = CacheKey::new("hello", Lang::Eng, "google-tts", 1);
+        cache.store(&key, "mp3", &wav()).unwrap();
+        let result = Speech::store_at(
+            &query,
+            &cache,
+            url::Url::parse("http://127.0.0.1:1").unwrap(),
+        )
+        .await
+        .unwrap();
+        assert_eq!(result.into_inner(), wav());
+        assert!(
+            Speech::prepare(&query, &cache, false)
+                .await
+                .unwrap()
+                .is_none()
+        );
+    }
+
+    #[tokio::test]
+    async fn corrupt_audio_is_replaced_and_refresh_bypasses_valid_cache() {
+        for refresh in [false, true] {
+            let root = tempfile::tempdir().unwrap();
+            let cache = cache(root.path());
+            let query = ExactQuery::new("hello".into(), Lang::Eng, refresh).unwrap();
+            let key = CacheKey::new("hello", Lang::Eng, "google-tts", 1);
+            let initial = if refresh {
+                let mut audio = wav();
+                audio[44] = 1;
+                audio
+            } else {
+                b"invalid audio".to_vec()
+            };
+            cache.store(&key, "mp3", &initial).unwrap();
+            let (url, server) =
+                crate::word::http::tests::server_with_body(200, std::time::Duration::ZERO, wav())
+                    .await;
+            let result = Speech::store_at(&query, &cache, url).await.unwrap();
+            assert_eq!(result.into_inner(), wav());
+            let mut cached = Vec::new();
+            cache
+                .query(&key, "mp3")
+                .unwrap()
+                .read_to_end(&mut cached)
+                .unwrap();
+            assert_eq!(cached, wav());
+            server.await.unwrap();
+        }
+    }
+
+    #[tokio::test]
+    async fn invalid_audio_responses_are_never_cached() {
+        let root = tempfile::tempdir().unwrap();
+        let cache = cache(root.path());
+        let query = ExactQuery::new("hello".into(), Lang::Eng, false).unwrap();
+        let (url, server) = crate::word::http::tests::server_with_body(
+            200,
+            std::time::Duration::ZERO,
+            "<html>Verification required</html>",
+        )
+        .await;
+        assert!(Speech::store_at(&query, &cache, url).await.is_err());
+        let key = CacheKey::new("hello", Lang::Eng, "google-tts", 1);
+        assert!(cache.query(&key, "mp3").is_err());
+        server.await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn downloaded_audio_survives_cache_write_failure() {
+        let root = tempfile::tempdir().unwrap();
+        let blocked = root.path().join("blocked");
+        std::fs::write(&blocked, b"not a directory").unwrap();
+        let cache = Cache::new(blocked, root.path().join("vault"), root.path().join("tmp"));
+        let query = ExactQuery::new("hello".into(), Lang::Eng, false).unwrap();
+        let (url, server) =
+            crate::word::http::tests::server_with_body(200, std::time::Duration::ZERO, wav()).await;
+        assert_eq!(
+            Speech::store_at(&query, &cache, url)
+                .await
+                .unwrap()
+                .into_inner(),
+            wav()
+        );
+        server.await.unwrap();
+    }
 
     #[test]
     fn speech_parameters_are_encoded_and_language_is_preserved() {

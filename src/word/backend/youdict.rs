@@ -1,24 +1,19 @@
-use crate::word::{Acquire, QueryYoudict, Request, Select};
+use crate::word::{QueryYoudict, Request, Select};
 use crate::{Answer, ExactQuery, Question, SingleEntry};
 use scraper::{ElementRef, Html, Selector};
 
-impl Acquire for QueryYoudict {
-    type WordQuery = ExactQuery;
-    type WordEntry = SingleEntry;
-    fn acquire(self, word_query: &ExactQuery) -> anyhow::Result<SingleEntry> {
-        let doc = self.request(word_query)?;
+impl QueryYoudict {
+    pub async fn acquire(self, word_query: &ExactQuery) -> anyhow::Result<SingleEntry> {
+        let doc = self.request(word_query).await?;
         QueryYoudict::parse_document(&doc, word_query)
     }
 }
 
 impl Request for QueryYoudict {
     type WordQuery = ExactQuery;
-    fn request(self, word_query: &ExactQuery) -> anyhow::Result<Html> {
-        let url = Self::url(word_query)?;
-        let bytes = futures::executor::block_on(crate::word::http::get(
-            &crate::word::http::client()?,
-            url,
-        ))?;
+    async fn request(self, word_query: &ExactQuery) -> anyhow::Result<Html> {
+        let url = self.url(word_query)?;
+        let bytes = crate::word::http::get(&crate::word::http::client()?, url).await?;
         let text = String::from_utf8(bytes)?;
         let doc = Html::parse_document(&text);
 
@@ -39,8 +34,8 @@ impl std::fmt::Display for UnexpectedPage {
 impl std::error::Error for UnexpectedPage {}
 
 impl QueryYoudict {
-    fn url(query: &ExactQuery) -> anyhow::Result<url::Url> {
-        let mut url = url::Url::parse("https://dict.youdao.com/search")?;
+    fn url(&self, query: &ExactQuery) -> anyhow::Result<url::Url> {
+        let mut url = self.endpoint.clone();
         url.query_pairs_mut().append_pair("q", &query.word());
         Ok(url)
     }
@@ -186,10 +181,84 @@ mod tests {
     use super::*;
     use whatlang::Lang;
 
+    #[tokio::test]
+    async fn lookup_runs_on_a_single_thread_runtime_and_caches_results() {
+        let (url, server) = crate::word::http::tests::server_with_body(
+            200, std::time::Duration::ZERO,
+            "<div id='phrsListTab'><div class='trans-container'><ul><li>A greeting</li></ul></div></div>",
+        ).await;
+        let root = tempfile::tempdir().unwrap();
+        let cache = crate::Cache::new(
+            root.path().join("cache"),
+            root.path().join("vault"),
+            root.path().join("tmp"),
+        );
+        let query = ExactQuery::new("hello".into(), Lang::Eng, false).unwrap();
+        let entry = QueryYoudict { endpoint: url }
+            .query_and_store(&query, &cache)
+            .await
+            .unwrap();
+        assert_eq!(entry.brief, ["A greeting"]);
+        assert!(cache.query(&query.cache_key(), "bin").is_ok());
+        server.await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn failed_and_empty_remote_results_never_create_cache_entries() {
+        for (status, body, is_error) in [
+            (500, "Service unavailable", true),
+            (200, "<html>Verification required</html>", true),
+            (
+                200,
+                "<div id='results-contents'><div id='wordArticle'></div></div>",
+                false,
+            ),
+        ] {
+            let (url, server) =
+                crate::word::http::tests::server_with_body(status, std::time::Duration::ZERO, body)
+                    .await;
+            let root = tempfile::tempdir().unwrap();
+            let cache = crate::Cache::new(
+                root.path().join("cache"),
+                root.path().join("vault"),
+                root.path().join("tmp"),
+            );
+            let query = ExactQuery::new("hello".into(), Lang::Eng, false).unwrap();
+            let result = QueryYoudict { endpoint: url }
+                .query_and_store(&query, &cache)
+                .await;
+            assert_eq!(result.is_err(), is_error);
+            if let Ok(entry) = result {
+                assert!(entry.not_found());
+            }
+            assert!(cache.query(&query.cache_key(), "bin").is_err());
+            server.await.unwrap();
+        }
+    }
+
+    #[tokio::test]
+    async fn online_lookup_succeeds_when_cache_is_unwritable() {
+        let (url, server) = crate::word::http::tests::server_with_body(
+            200, std::time::Duration::ZERO,
+            "<div id='phrsListTab'><div class='trans-container'><ul><li>A greeting</li></ul></div></div>",
+        ).await;
+        let root = tempfile::tempdir().unwrap();
+        let blocked = root.path().join("blocked");
+        std::fs::write(&blocked, b"not a directory").unwrap();
+        let cache = crate::Cache::new(blocked, root.path().join("vault"), root.path().join("tmp"));
+        let query = ExactQuery::new("hello".into(), Lang::Eng, false).unwrap();
+        let entry = QueryYoudict { endpoint: url }
+            .query_and_store(&query, &cache)
+            .await
+            .unwrap();
+        assert_eq!(entry.brief, ["A greeting"]);
+        server.await.unwrap();
+    }
+
     #[test]
     fn query_parameters_preserve_special_characters() {
         let query = ExactQuery::new("C++ & x=1#tail".into(), Lang::Eng, false).unwrap();
-        let url = QueryYoudict::url(&query).unwrap();
+        let url = QueryYoudict::new().url(&query).unwrap();
         assert_eq!(url.scheme(), "https");
         assert_eq!(
             url.query_pairs().collect::<Vec<_>>(),

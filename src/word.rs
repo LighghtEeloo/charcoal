@@ -28,7 +28,7 @@ pub trait Acquire {
 
 trait Request {
     type WordQuery;
-    fn request(self, word_query: &Self::WordQuery) -> anyhow::Result<Html>;
+    async fn request(self, word_query: &Self::WordQuery) -> anyhow::Result<Html>;
 }
 
 trait Select {
@@ -41,6 +41,7 @@ pub trait PPrint: Answer {
     fn pprint(&self, question: &impl Question, config: &Config);
 }
 
+#[derive(Clone)]
 pub struct ExactQuery {
     word: String,
     lang: Lang,

@@ -40,7 +40,7 @@ pub(crate) async fn get(client: &Client, url: Url) -> anyhow::Result<Vec<u8>> {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use tokio::{
         io::{AsyncReadExt, AsyncWriteExt},
@@ -48,17 +48,35 @@ mod tests {
     };
 
     async fn server(status: u16, delay: Duration) -> (Url, tokio::task::JoinHandle<()>) {
+        server_with_body(status, delay, "body").await
+    }
+
+    pub(crate) async fn server_with_body(
+        status: u16, delay: Duration, body: impl AsRef<[u8]>,
+    ) -> (Url, tokio::task::JoinHandle<()>) {
+        let body = body.as_ref().to_vec();
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let url = Url::parse(&format!("http://{}/", listener.local_addr().unwrap())).unwrap();
         let task = tokio::spawn(async move {
             let (mut stream, _) = listener.accept().await.unwrap();
-            let mut request = [0; 4096];
-            stream.read(&mut request).await.unwrap();
+            let mut request = Vec::new();
+            while !request.ends_with(b"\r\n\r\n") {
+                let mut chunk = [0; 1024];
+                let count = stream.read(&mut chunk).await.unwrap();
+                if count == 0 {
+                    return;
+                }
+                request.extend_from_slice(&chunk[..count]);
+                assert!(request.len() <= 16384, "Request headers exceed test limit");
+            }
             tokio::time::sleep(delay).await;
-            let response = format!(
-                "HTTP/1.1 {status} Test\r\nContent-Length: 4\r\nConnection: close\r\n\r\nbody"
-            );
-            let _ = stream.write_all(response.as_bytes()).await;
+            let mut response = format!(
+                "HTTP/1.1 {status} Test\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+                body.len()
+            )
+            .into_bytes();
+            response.extend_from_slice(&body);
+            let _ = stream.write_all(&response).await;
         });
         (url, task)
     }

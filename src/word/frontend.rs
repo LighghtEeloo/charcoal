@@ -17,7 +17,14 @@ impl SingleEntry {
     /// Query a word first from cache and then from the web
     pub async fn query(word_query: &ExactQuery, cache: &Cache) -> anyhow::Result<Self> {
         if !word_query.refresh() {
-            match QueryCache::new(cache).acquire(word_query) {
+            let cache = cache.clone();
+            let query = word_query.clone();
+            let cached =
+                tokio::task::spawn_blocking(move || QueryCache::new(&cache).acquire(&query))
+                    .await
+                    .map_err(anyhow::Error::from)
+                    .and_then(|result| result);
+            match cached {
                 Ok(entry) => return Ok(entry),
                 Err(err) => {
                     if !err
@@ -29,7 +36,7 @@ impl SingleEntry {
                 }
             }
         }
-        QueryYoudict::new().query_and_store(word_query, cache)
+        QueryYoudict::new().query_and_store(word_query, cache).await
     }
 }
 
