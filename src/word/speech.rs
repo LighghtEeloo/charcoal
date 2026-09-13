@@ -50,11 +50,15 @@ impl Speech {
     }
 
     async fn store(word_query: &impl Question, cache: &Cache) -> anyhow::Result<Cursor<Vec<u8>>> {
-        Self::store_at(word_query, cache, Self::url(word_query)?).await
+        Self::store_with_fetch(word_query, cache, async {
+            crate::word::http::get(&crate::word::http::client()?, Self::url(word_query)?).await
+        })
+        .await
     }
 
-    async fn store_at(
-        word_query: &impl Question, cache: &Cache, url: url::Url,
+    async fn store_with_fetch(
+        word_query: &impl Question, cache: &Cache,
+        fetch: impl std::future::Future<Output = anyhow::Result<Vec<u8>>>,
     ) -> anyhow::Result<Cursor<Vec<u8>>> {
         let key = CacheKey::new(&word_query.word(), word_query.lang(), "google-tts", 1);
         if !word_query.refresh() {
@@ -84,7 +88,7 @@ impl Speech {
                 }
             }
         }
-        let bytes = crate::word::http::get(&crate::word::http::client()?, url).await?;
+        let bytes = fetch.await?;
         let cache = cache.clone();
         tokio::task::spawn_blocking(move || {
             Self::validate(&bytes)?;
@@ -119,6 +123,17 @@ mod tests {
     use super::*;
     use crate::ExactQuery;
 
+    async fn store_at(
+        query: &impl Question, cache: &Cache, url: url::Url,
+    ) -> anyhow::Result<Cursor<Vec<u8>>> {
+        Speech::store_with_fetch(
+            query,
+            cache,
+            crate::word::http::get(&crate::word::http::tests::client(), url),
+        )
+        .await
+    }
+
     fn wav() -> Vec<u8> {
         let mut bytes = Vec::new();
         bytes.extend_from_slice(b"RIFF");
@@ -148,7 +163,7 @@ mod tests {
         let query = ExactQuery::new("hello".into(), Lang::Eng, false).unwrap();
         let key = CacheKey::new("hello", Lang::Eng, "google-tts", 1);
         cache.store(&key, "mp3", &wav()).unwrap();
-        let result = Speech::store_at(
+        let result = store_at(
             &query,
             &cache,
             url::Url::parse("http://127.0.0.1:1").unwrap(),
@@ -182,7 +197,7 @@ mod tests {
             let (url, server) =
                 crate::word::http::tests::server_with_body(200, std::time::Duration::ZERO, wav())
                     .await;
-            let result = Speech::store_at(&query, &cache, url).await.unwrap();
+            let result = store_at(&query, &cache, url).await.unwrap();
             assert_eq!(result.into_inner(), wav());
             let mut cached = Vec::new();
             cache
@@ -191,7 +206,7 @@ mod tests {
                 .read_to_end(&mut cached)
                 .unwrap();
             assert_eq!(cached, wav());
-            server.await.unwrap();
+            server.finish().await.unwrap();
         }
     }
 
@@ -206,10 +221,14 @@ mod tests {
             "<html>Verification required</html>",
         )
         .await;
-        assert!(Speech::store_at(&query, &cache, url).await.is_err());
+        let error = store_at(&query, &cache, url).await.unwrap_err();
+        assert!(
+            error.is::<rodio::decoder::DecoderError>(),
+            "Expected invalid audio, got: {error:#}"
+        );
         let key = CacheKey::new("hello", Lang::Eng, "google-tts", 1);
         assert!(cache.query(&key, "mp3").is_err());
-        server.await.unwrap();
+        server.finish().await.unwrap();
     }
 
     #[tokio::test]
@@ -222,13 +241,10 @@ mod tests {
         let (url, server) =
             crate::word::http::tests::server_with_body(200, std::time::Duration::ZERO, wav()).await;
         assert_eq!(
-            Speech::store_at(&query, &cache, url)
-                .await
-                .unwrap()
-                .into_inner(),
+            store_at(&query, &cache, url).await.unwrap().into_inner(),
             wav()
         );
-        server.await.unwrap();
+        server.finish().await.unwrap();
     }
 
     #[test]

@@ -4,16 +4,25 @@ use scraper::{ElementRef, Html, Selector};
 
 impl QueryYoudict {
     pub async fn acquire(self, word_query: &ExactQuery) -> anyhow::Result<SingleEntry> {
-        let doc = self.request(word_query).await?;
+        self.acquire_with_client(word_query, &crate::word::http::client()?)
+            .await
+    }
+
+    pub(super) async fn acquire_with_client(
+        self, word_query: &ExactQuery, client: &reqwest::Client,
+    ) -> anyhow::Result<SingleEntry> {
+        let doc = self.request(word_query, client).await?;
         QueryYoudict::parse_document(&doc, word_query)
     }
 }
 
 impl Request for QueryYoudict {
     type WordQuery = ExactQuery;
-    async fn request(self, word_query: &ExactQuery) -> anyhow::Result<Html> {
+    async fn request(
+        self, word_query: &ExactQuery, client: &reqwest::Client,
+    ) -> anyhow::Result<Html> {
         let url = self.url(word_query)?;
-        let bytes = crate::word::http::get(&crate::word::http::client()?, url).await?;
+        let bytes = crate::word::http::get(client, url).await?;
         let text = String::from_utf8(bytes)?;
         let doc = Html::parse_document(&text);
 
@@ -195,12 +204,12 @@ mod tests {
         );
         let query = ExactQuery::new("hello".into(), Lang::Eng, false).unwrap();
         let entry = QueryYoudict { endpoint: url }
-            .query_and_store(&query, &cache)
+            .query_and_store_with_client(&query, &cache, &crate::word::http::tests::client())
             .await
             .unwrap();
         assert_eq!(entry.brief, ["A greeting"]);
         assert!(cache.query(&query.cache_key(), "bin").is_ok());
-        server.await.unwrap();
+        server.finish().await.unwrap();
     }
 
     #[tokio::test]
@@ -225,14 +234,14 @@ mod tests {
             );
             let query = ExactQuery::new("hello".into(), Lang::Eng, false).unwrap();
             let result = QueryYoudict { endpoint: url }
-                .query_and_store(&query, &cache)
+                .query_and_store_with_client(&query, &cache, &crate::word::http::tests::client())
                 .await;
             assert_eq!(result.is_err(), is_error);
             if let Ok(entry) = result {
                 assert!(entry.not_found());
             }
             assert!(cache.query(&query.cache_key(), "bin").is_err());
-            server.await.unwrap();
+            server.finish().await.unwrap();
         }
     }
 
@@ -248,11 +257,11 @@ mod tests {
         let cache = crate::Cache::new(blocked, root.path().join("vault"), root.path().join("tmp"));
         let query = ExactQuery::new("hello".into(), Lang::Eng, false).unwrap();
         let entry = QueryYoudict { endpoint: url }
-            .query_and_store(&query, &cache)
+            .query_and_store_with_client(&query, &cache, &crate::word::http::tests::client())
             .await
             .unwrap();
         assert_eq!(entry.brief, ["A greeting"]);
-        server.await.unwrap();
+        server.finish().await.unwrap();
     }
 
     #[test]

@@ -28,7 +28,9 @@ pub trait Acquire {
 
 trait Request {
     type WordQuery;
-    async fn request(self, word_query: &Self::WordQuery) -> anyhow::Result<Html>;
+    async fn request(
+        self, word_query: &Self::WordQuery, client: &reqwest::Client,
+    ) -> anyhow::Result<Html>;
 }
 
 trait Select {

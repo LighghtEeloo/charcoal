@@ -46,7 +46,14 @@ impl QueryYoudict {
     pub async fn query_and_store(
         self, word_query: &ExactQuery, cache: &Cache,
     ) -> anyhow::Result<SingleEntry> {
-        let word_entry = self.acquire(word_query).await?;
+        self.query_and_store_with_client(word_query, cache, &crate::word::http::client()?)
+            .await
+    }
+
+    async fn query_and_store_with_client(
+        self, word_query: &ExactQuery, cache: &Cache, client: &reqwest::Client,
+    ) -> anyhow::Result<SingleEntry> {
+        let word_entry = self.acquire_with_client(word_query, client).await?;
         let query = word_query.clone();
         let cache = cache.clone();
         let entry = word_entry.clone();
