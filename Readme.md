@@ -110,7 +110,7 @@ alias chr="RUST_LOG=info target/debug/charcoal query -s"
 
 Text and audio caches use SHA-256 filenames derived from the query, language, provider, and format version. Writes replace complete files atomically, so interrupted or concurrent queries do not expose partial entries.
 
-Older on-disk cache entries are not reused because they lack language and format metadata. They can be removed with `charcoal cache clean`; queries repopulate the cache as needed. Legacy word-named exports can still be imported as English entries. New exports preserve the complete cache identity.
+Older on-disk cache entries are not reused because they lack language and format metadata. They can be removed with `charcoal cache clean`; queries repopulate the cache as needed. New exports preserve the complete cache identity.
 
 
 ## Pinor Arts

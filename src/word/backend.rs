@@ -4,6 +4,11 @@ use crate::app::cache::CacheKey;
 use crate::{Acquire, Answer, Cache, ExactQuery, Question, SingleEntry};
 use anyhow::Context;
 
+/// Bump when the parsed dictionary entry representation changes so that entries
+/// written by older parsers are not served from cache. Version 2 skips the empty
+/// example rows produced for Youdao's audio-only media examples.
+const DICTIONARY_CACHE_FORMAT_VERSION: u32 = 2;
+
 pub struct QueryCache<'a> {
     cache: &'a Cache,
 }
@@ -84,7 +89,12 @@ impl QueryYoudict {
 
 impl ExactQuery {
     pub(crate) fn cache_key(&self) -> CacheKey {
-        CacheKey::new(&self.word(), self.lang(), "youdao", 1)
+        CacheKey::new(
+            &self.word(),
+            self.lang(),
+            "youdao",
+            DICTIONARY_CACHE_FORMAT_VERSION,
+        )
     }
 }
 
@@ -151,5 +161,31 @@ mod tests {
         wincode::serialize_into(&mut bytes, &entry).unwrap();
         cache.store(&query.cache_key(), "bin", &bytes).unwrap();
         assert!(QueryCache::new(&cache).acquire(&query).is_err());
+    }
+
+    #[test]
+    fn entries_from_the_previous_cache_format_version_are_ignored() {
+        let root = tempfile::tempdir().unwrap();
+        let cache = Cache::new(
+            root.path().join("cache"),
+            root.path().join("vault"),
+            root.path().join("tmp"),
+        );
+        let query = ExactQuery::new("hello".into(), Lang::Eng, false).unwrap();
+        let mut bytes = Vec::new();
+        wincode::serialize_into(&mut bytes, &entry()).unwrap();
+
+        // Version 1 entries may still contain blank example rows, so they must not
+        // be served now that parsing filters those rows out.
+        let previous = CacheKey::new(&query.word(), query.lang(), "youdao", 1);
+        cache.store(&previous, "bin", &bytes).unwrap();
+        assert!(QueryCache::new(&cache).acquire(&query).is_err());
+
+        // Entries written with the current format version keep round-tripping.
+        cache.store(&query.cache_key(), "bin", &bytes).unwrap();
+        assert_eq!(
+            QueryCache::new(&cache).acquire(&query).unwrap().brief,
+            ["A greeting"]
+        );
     }
 }

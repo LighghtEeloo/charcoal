@@ -144,6 +144,9 @@ impl Select for Sentence {
         Ok(elem
             .select(&sel)
             .filter_map(|child| Sen::select(child, word_query).ok())
+            // Youdao's media examples only carry audio anchors; their visible
+            // paragraphs are empty, so they must not render as blank examples.
+            .filter(|(ori, trans)| !(ori.is_empty() && trans.is_empty()))
             .collect())
     }
 }
@@ -354,6 +357,34 @@ mod tests {
             Sentence::select(doc.root_element(), &query)
                 .unwrap()
                 .is_empty()
+        );
+    }
+
+    #[test]
+    fn empty_media_example_placeholders_are_skipped() {
+        // Youdao's media examples only expose an audio anchor; their visible
+        // paragraphs are empty and must not become blank rendered examples.
+        let doc = Html::parse_fragment(
+            r#"<div id="bilingual" class="trans-container">
+                <li>
+                    <p><a class="sp dictvoice" data-rel="He+concedes&le=eng"></a></p>
+                    <p> </p>
+                    <p class="example-via"><a rel="nofollow">youdao</a></p>
+                </li>
+                <li>
+                    <p>He <b>concedes</b> that there are imperfections in the current system.</p>
+                    <p>他承认，当前的制度有些缺陷。</p>
+                    <p class="example-via"><a rel="nofollow">《柯林斯英汉双解大词典》</a></p>
+                </li>
+            </div>"#,
+        );
+        let query = ExactQuery::new("concedes".to_owned(), Lang::Eng, false).unwrap();
+        assert_eq!(
+            Sentence::select(doc.root_element(), &query).unwrap(),
+            vec![(
+                "He concedes that there are imperfections in the current system.".to_owned(),
+                "他承认，当前的制度有些缺陷。".to_owned(),
+            )]
         );
     }
 }
