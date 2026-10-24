@@ -13,7 +13,7 @@ paru -S charcoal-dict-bin
 Brew:
 
 ```sh
-brew install lighghteeloo/charcoal/charcoal
+brew install lighghteeloo/charcoal/charcoal-dict
 ```
 
 Build from source:
