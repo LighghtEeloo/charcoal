@@ -309,7 +309,7 @@ dependencies = [
 
 [[package]]
 name = "charcoal-dict"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "anyhow",
  "clap 4.5.60",

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.3 - 2026-10-24
 - Display Collins English-Chinese dictionary entries alongside Youdao results.
 - Replace `main_mode` with a `sections` selection (`true` for all, or an ordered list) plus per-section detail switches; old configurations are upgraded in place.
 - Add `--sections` and `--format json` query options, plus `-a`/`--all` to enable every section.
