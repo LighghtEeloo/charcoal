@@ -39,6 +39,8 @@ set edit:completion:arg-completer[charcoal] = {|@words|
             cand --refresh 'Whether to refresh cache'
             cand -c 'Be concise'
             cand --concise 'Be concise'
+            cand -a 'Enable all content sections'
+            cand --all 'Enable all content sections'
             cand -h 'Print help (see more with ''--help'')'
             cand --help 'Print help (see more with ''--help'')'
         }

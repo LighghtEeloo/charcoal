@@ -43,6 +43,8 @@ Register-ArgumentCompleter -Native -CommandName 'charcoal' -ScriptBlock {
             [CompletionResult]::new('--refresh', '--refresh', [CompletionResultType]::ParameterName, 'Whether to refresh cache')
             [CompletionResult]::new('-c', '-c', [CompletionResultType]::ParameterName, 'Be concise')
             [CompletionResult]::new('--concise', '--concise', [CompletionResultType]::ParameterName, 'Be concise')
+            [CompletionResult]::new('-a', '-a', [CompletionResultType]::ParameterName, 'Enable all content sections')
+            [CompletionResult]::new('--all', '--all', [CompletionResultType]::ParameterName, 'Enable all content sections')
             [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help (see more with ''--help'')')
             [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help (see more with ''--help'')')
             break

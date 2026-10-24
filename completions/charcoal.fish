@@ -44,6 +44,7 @@ complete -c charcoal -n "__fish_charcoal_using_subcommand query" -s s -l speak -
 complete -c charcoal -n "__fish_charcoal_using_subcommand query" -s q -l mute -d 'Mute (overloads speak)'
 complete -c charcoal -n "__fish_charcoal_using_subcommand query" -l refresh -d 'Whether to refresh cache'
 complete -c charcoal -n "__fish_charcoal_using_subcommand query" -s c -l concise -d 'Be concise'
+complete -c charcoal -n "__fish_charcoal_using_subcommand query" -s a -l all -d 'Enable all content sections'
 complete -c charcoal -n "__fish_charcoal_using_subcommand query" -s h -l help -d 'Print help (see more with \'--help\')'
 complete -c charcoal -n "__fish_charcoal_using_subcommand edit" -l reset -d 'A fresh start'
 complete -c charcoal -n "__fish_charcoal_using_subcommand edit" -s h -l help -d 'Print help'

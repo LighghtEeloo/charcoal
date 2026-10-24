@@ -301,7 +301,9 @@ impl Config {
             speak_as.twitch(&mut self.speak);
         }
 
-        if let Some(sections) = &args.sections {
+        if args.all {
+            self.sections = Sections::All;
+        } else if let Some(sections) = &args.sections {
             self.sections = Sections::List(
                 sections
                     .iter()
@@ -578,5 +580,26 @@ mod tests {
         let mut args = query_args(&["charcoal", "query", "hello", "--sections", "youdao"]);
         config.apply(&mut args);
         assert_eq!(config.sections, Sections::List(vec![Section::Youdao]));
+
+        // `-a` overrides a narrowed configuration for this query.
+        let mut args = query_args(&["charcoal", "query", "hello", "-a"]);
+        config.apply(&mut args);
+        assert_eq!(config.sections, Sections::All);
+    }
+
+    #[test]
+    fn all_flag_conflicts_with_explicit_sections() {
+        assert!(
+            Cli::try_parse_from([
+                "charcoal",
+                "query",
+                "hello",
+                "--all",
+                "--sections",
+                "youdao",
+            ])
+            .is_err()
+        );
+        assert!(Cli::try_parse_from(["charcoal", "query", "hello", "-a"]).is_ok());
     }
 }

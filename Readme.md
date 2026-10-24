@@ -52,6 +52,13 @@ page and in which order they are displayed:
 charcoal query concedes --sections youdao,collins
 ```
 
+Use `-a`/`--all` to enable every section for one query, even when the
+configuration narrows the selection (it cannot be combined with `--sections`):
+
+```sh
+charcoal query concedes -a
+```
+
 Use `--format json` for machine-readable output containing the selected
 sections instead of the colorized text output:
 

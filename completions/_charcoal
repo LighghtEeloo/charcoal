@@ -47,6 +47,8 @@ json\:"Machine readable JSON for the selected sections"))' \
 '--refresh[Whether to refresh cache]' \
 '-c[Be concise]' \
 '--concise[Be concise]' \
+'(--sections)-a[Enable all content sections]' \
+'(--sections)--all[Enable all content sections]' \
 '-h[Print help (see more with '\''--help'\'')]' \
 '--help[Print help (see more with '\''--help'\'')]' \
 '*::query -- The word to be queried:_default' \

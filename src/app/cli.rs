@@ -56,6 +56,9 @@ pub struct QueryArgs {
     /// Whether to be concise
     #[clap(value_parser, long)]
     pub concise_as: Option<Toggle>,
+    /// Enable all content sections
+    #[clap(short, long, conflicts_with = "sections")]
+    pub all: bool,
     /// Content sections to display, in this order (overrides the configuration)
     #[clap(long, value_enum, value_delimiter = ',')]
     pub sections: Option<Vec<SectionArg>>,
