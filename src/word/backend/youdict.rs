@@ -122,6 +122,7 @@ impl Select for QueryYoudict {
         };
 
         let sentence = Sentence::select(elem, word_query)?;
+        let collins = super::collins::parse(doc);
 
         Ok(SingleEntry {
             pronunciation,
@@ -129,6 +130,7 @@ impl Select for QueryYoudict {
             variants,
             authority: Vec::new(),
             sentence,
+            collins,
         })
     }
 }
@@ -165,12 +167,7 @@ impl Select for Sen {
             let paragraph = iter.next().ok_or_else(|| anyhow::anyhow!("{msg}"))?;
             // Inline elements may split words or contain the spaces between them.
             // Preserve those boundaries before collapsing HTML whitespace.
-            Ok(paragraph
-                .text()
-                .collect::<String>()
-                .split_whitespace()
-                .collect::<Vec<_>>()
-                .join(" "))
+            Ok(paragraph_text(paragraph))
         };
 
         let ori = extract("No ori found in sentence")?;
@@ -186,6 +183,16 @@ fn trim_str(t: &str) -> Option<String> {
     } else {
         Some(t.to_owned())
     }
+}
+
+/// Collapse HTML whitespace while keeping the word boundaries introduced by
+/// inline elements (for example `foo<b>bar</b> baz` must become `foobar baz`).
+pub(super) fn normalize_whitespace(text: &str) -> String {
+    text.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+pub(super) fn paragraph_text(paragraph: ElementRef<'_>) -> String {
+    normalize_whitespace(&paragraph.text().collect::<String>())
 }
 
 #[cfg(test)]
@@ -386,5 +393,52 @@ mod tests {
                 "他承认，当前的制度有些缺陷。".to_owned(),
             )]
         );
+    }
+
+    #[tokio::test]
+    async fn collins_block_is_parsed_from_the_same_page() {
+        let body = r#"
+            <div id="phrsListTab"><div class="trans-container"><ul><li>A greeting</li></ul></div></div>
+            <div id="authTrans"><div id="authTransToggle"><div id="collinsResult">
+                <div class="collinsToggle"><div class="wt-container">
+                    <h4><span class="title">hello</span>
+                        <em class="additional spell phonetic">/həˈləʊ/</em>
+                        <span class="via rank">CET4</span>
+                    </h4>
+                    <ul class="ol"><li>
+                        <div class="collinsMajorTrans">
+                            <span class="collinsOrder">1.&nbsp;</span>
+                            <p><span class="additional">CONVENTION</span> You say hello.
+                                你好 <span class="additional">[套语]</span></p>
+                        </div>
+                    </li></ul>
+                </div></div>
+            </div></div></div>
+        "#;
+        let (url, server) =
+            crate::word::http::tests::server_with_body(200, std::time::Duration::ZERO, body).await;
+        let root = tempfile::tempdir().unwrap();
+        let cache = crate::Cache::new(
+            root.path().join("cache"),
+            root.path().join("vault"),
+            root.path().join("tmp"),
+        );
+        let query = ExactQuery::new("hello".into(), Lang::Eng, false).unwrap();
+        let entry = QueryYoudict { endpoint: url }
+            .query_and_store_with_client(&query, &cache, &crate::word::http::tests::client())
+            .await
+            .unwrap();
+
+        assert_eq!(entry.brief, ["A greeting"]);
+        let collins = entry.collins.expect("Collins content should be parsed");
+        assert_eq!(collins.groups.len(), 1);
+        assert_eq!(collins.groups[0].headword, "hello");
+        assert_eq!(collins.groups[0].phonetic.as_deref(), Some("/həˈləʊ/"));
+        assert_eq!(
+            collins.groups[0].senses[0].pos.as_deref(),
+            Some("CONVENTION")
+        );
+        assert_eq!(collins.groups[0].senses[0].translation, "你好 [套语]");
+        server.finish().await.unwrap();
     }
 }

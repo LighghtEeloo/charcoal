@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+- Display Collins English-Chinese dictionary entries alongside Youdao results.
+- Replace `main_mode` with a `sections` selection (`true` for all, or an ordered list) plus per-section detail switches; old configurations are upgraded in place.
+- Add `--sections` and `--format json` query options.
+- Use a subtle dim `▾ section` heading instead of rule lines between sections.
+
 ## 0.2.6 - 0.2.8
 - Introduce `dym` for error correction.
 - Fix wrong whitespaces.

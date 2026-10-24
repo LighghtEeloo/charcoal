@@ -30,6 +30,8 @@ set edit:completion:arg-completer[charcoal] = {|@words|
         &'charcoal;query'= {
             cand --speak-as 'Whether to speak aloud'
             cand --concise-as 'Whether to be concise'
+            cand --sections 'Content sections to display, in this order (overrides the configuration)'
+            cand --format 'Output format'
             cand -s 'Speak aloud'
             cand --speak 'Speak aloud'
             cand -q 'Mute (overloads speak)'

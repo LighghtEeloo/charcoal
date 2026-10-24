@@ -1,3 +1,4 @@
+mod collins;
 mod youdict;
 
 use crate::app::cache::CacheKey;
@@ -6,8 +7,9 @@ use anyhow::Context;
 
 /// Bump when the parsed dictionary entry representation changes so that entries
 /// written by older parsers are not served from cache. Version 2 skips the empty
-/// example rows produced for Youdao's audio-only media examples.
-const DICTIONARY_CACHE_FORMAT_VERSION: u32 = 2;
+/// example rows produced for Youdao's audio-only media examples; version 3 adds
+/// the parsed Collins dictionary block.
+const DICTIONARY_CACHE_FORMAT_VERSION: u32 = 3;
 
 pub struct QueryCache<'a> {
     cache: &'a Cache,
@@ -110,6 +112,7 @@ mod tests {
             variants: vec![],
             authority: vec![],
             sentence: vec![],
+            collins: None,
         }
     }
 
@@ -175,9 +178,14 @@ mod tests {
         let mut bytes = Vec::new();
         wincode::serialize_into(&mut bytes, &entry()).unwrap();
 
-        // Version 1 entries may still contain blank example rows, so they must not
-        // be served now that parsing filters those rows out.
-        let previous = CacheKey::new(&query.word(), query.lang(), "youdao", 1);
+        // Entries written by the previous parser carry a different `SingleEntry`
+        // layout (they have no Collins block), so they must not be served.
+        let previous = CacheKey::new(
+            &query.word(),
+            query.lang(),
+            "youdao",
+            DICTIONARY_CACHE_FORMAT_VERSION - 1,
+        );
         cache.store(&previous, "bin", &bytes).unwrap();
         assert!(QueryCache::new(&cache).acquire(&query).is_err());
 
@@ -187,5 +195,38 @@ mod tests {
             QueryCache::new(&cache).acquire(&query).unwrap().brief,
             ["A greeting"]
         );
+    }
+
+    #[test]
+    fn collins_entries_round_trip_through_the_cache() {
+        use crate::word::frontend::{CollinsEntry, CollinsGroup, CollinsSense};
+
+        let root = tempfile::tempdir().unwrap();
+        let cache = Cache::new(
+            root.path().join("cache"),
+            root.path().join("vault"),
+            root.path().join("tmp"),
+        );
+        let query = ExactQuery::new("fast".into(), Lang::Eng, false).unwrap();
+        let mut entry = entry();
+        entry.collins = Some(CollinsEntry {
+            groups: vec![CollinsGroup {
+                title: Some("VERB USES".into()),
+                headword: "fast".into(),
+                phonetic: Some("/fæst/".into()),
+                ranks: Some("CET4 TEM4".into()),
+                word_forms: Some("(fasting, fasted, fasts)".into()),
+                senses: vec![CollinsSense {
+                    pos: Some("V-I".into()),
+                    definition: "If you fast, you eat nothing.".into(),
+                    translation: "禁食".into(),
+                    examples: vec![("She fasted for three days.".into(), "她禁食了三天。".into())],
+                }],
+            }],
+        });
+
+        QueryYoudict::cache_entry(&query, &cache, &entry);
+        let loaded = QueryCache::new(&cache).acquire(&query).unwrap();
+        assert_eq!(loaded.collins, entry.collins);
     }
 }

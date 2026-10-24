@@ -45,6 +45,20 @@ where query can be shortened as `q`, `search`, or `s`.
 
 With `-s` or `--speak-as true` one can force the happening of a speech.
 
+Use `--sections` to override which content blocks are queried from the same
+page and in which order they are displayed:
+
+```sh
+charcoal query concedes --sections youdao,collins
+```
+
+Use `--format json` for machine-readable output containing the selected
+sections instead of the colorized text output:
+
+```sh
+charcoal query concedes --format json
+```
+
 ### Edit
 
 You may want to edit the configuration file in an easy way. `charcoal` gets you covered:
@@ -86,7 +100,44 @@ for each subcommand, say, `query`.
 
 ## Configuration
 
-Configurations are straight forward. Just change the booleans and they're yours.
+`sections` decides which content blocks are shown. `sections = true` enables
+every section in the canonical order and is the default written for new
+configurations; an explicit list selects a subset or a custom order. Each
+section has its own detail switches:
+
+```toml
+sections = true
+
+[youdao]
+with_pronunciation = true
+with_variants = true
+with_sentence = true
+
+[collins]
+with_phonetic = true
+with_word_forms = true
+with_examples = true
+```
+
+For example, `sections = ["collins"]` shows only the Collins block, and
+`sections = ["collins", "youdao"]` also changes the rendering order.
+
+- `youdao`: Youdao's basic translation block (pronunciation, word forms and
+  example sentences).
+- `collins`: Collins English-Chinese dictionary (grouped senses and examples).
+
+Multiple sections are introduced by a dim `▾` heading with the section name
+(`▾ youdao`, `▾ collins`), while a single-section selection keeps the plain
+output. If a selected section has no content for a word, a dim
+`(collins: no content)` notice is printed instead of falling back to another
+section.
+
+`-c`/`--concise` is a global depth preset: it hides example sentences and
+word-form lines from every section, leaving definitions and pronunciations.
+
+Configuration files written by older versions (`main_mode` and a `[Normal]`
+table) are upgraded automatically on load. The rewrite is atomic, and a failed
+rewrite only logs a warning without blocking the query.
 
 ## Dev
 

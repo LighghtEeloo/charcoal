@@ -36,6 +36,10 @@ flip\t'Flip'"
 complete -c charcoal -n "__fish_charcoal_using_subcommand query" -l concise-as -d 'Whether to be concise' -r -f -a "true\t'True'
 false\t'False'
 flip\t'Flip'"
+complete -c charcoal -n "__fish_charcoal_using_subcommand query" -l sections -d 'Content sections to display, in this order (overrides the configuration)' -r -f -a "youdao\t'Youdao\'s basic translation block'
+collins\t'Collins English-Chinese dictionary block'"
+complete -c charcoal -n "__fish_charcoal_using_subcommand query" -l format -d 'Output format' -r -f -a "human\t'Human readable, colorized output'
+json\t'Machine readable JSON for the selected sections'"
 complete -c charcoal -n "__fish_charcoal_using_subcommand query" -s s -l speak -d 'Speak aloud'
 complete -c charcoal -n "__fish_charcoal_using_subcommand query" -s q -l mute -d 'Mute (overloads speak)'
 complete -c charcoal -n "__fish_charcoal_using_subcommand query" -l refresh -d 'Whether to refresh cache'

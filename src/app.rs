@@ -26,6 +26,8 @@ impl App {
 
         config.apply(&mut args);
 
+        let format = args.format;
+
         let word_query = {
             let word_query = ExactQuery::new(args.query(), config.lang, args.refresh);
             if let Some(word_query) = word_query {
@@ -39,7 +41,10 @@ impl App {
         let (word_entry, audio) = lookup_with_prefetch(
             SingleEntry::query(&word_query, &cache),
             Speech::prepare(&word_query, &cache, config.speak),
-            |entry| entry.pprint(&word_query, &config),
+            |entry| match format {
+                cli::Format::Human => entry.pprint(&word_query, &config),
+                cli::Format::Json => entry.print_json(&word_query, &config),
+            },
         )
         .await?;
 
@@ -154,6 +159,7 @@ mod tests {
             variants: vec![],
             authority: vec![],
             sentence: vec![],
+            collins: None,
         }
     }
 

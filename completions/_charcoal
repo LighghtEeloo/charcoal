@@ -36,6 +36,10 @@ flip\:"Flip"))' \
 '--concise-as=[Whether to be concise]:CONCISE_AS:((true\:"True"
 false\:"False"
 flip\:"Flip"))' \
+'*--sections=[Content sections to display, in this order (overrides the configuration)]:SECTIONS:((youdao\:"Youdao'\''s basic translation block"
+collins\:"Collins English-Chinese dictionary block"))' \
+'--format=[Output format]:FORMAT:((human\:"Human readable, colorized output"
+json\:"Machine readable JSON for the selected sections"))' \
 '-s[Speak aloud]' \
 '--speak[Speak aloud]' \
 '-q[Mute (overloads speak)]' \

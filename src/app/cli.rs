@@ -56,6 +56,31 @@ pub struct QueryArgs {
     /// Whether to be concise
     #[clap(value_parser, long)]
     pub concise_as: Option<Toggle>,
+    /// Content sections to display, in this order (overrides the configuration)
+    #[clap(long, value_enum, value_delimiter = ',')]
+    pub sections: Option<Vec<SectionArg>>,
+    /// Output format
+    #[clap(long, value_enum, default_value = "human")]
+    pub format: Format,
+}
+
+/// A content section selectable from the command line.
+#[derive(Clone, Copy, Debug, ValueEnum)]
+pub enum SectionArg {
+    /// Youdao's basic translation block
+    Youdao,
+    /// Collins English-Chinese dictionary block
+    Collins,
+}
+
+/// How the query result is printed.
+#[derive(Clone, Copy, Debug, Default, ValueEnum)]
+pub enum Format {
+    /// Human readable, colorized output
+    #[default]
+    Human,
+    /// Machine readable JSON for the selected sections
+    Json,
 }
 
 impl QueryArgs {

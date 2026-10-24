@@ -34,6 +34,8 @@ Register-ArgumentCompleter -Native -CommandName 'charcoal' -ScriptBlock {
         'charcoal;query' {
             [CompletionResult]::new('--speak-as', '--speak-as', [CompletionResultType]::ParameterName, 'Whether to speak aloud')
             [CompletionResult]::new('--concise-as', '--concise-as', [CompletionResultType]::ParameterName, 'Whether to be concise')
+            [CompletionResult]::new('--sections', '--sections', [CompletionResultType]::ParameterName, 'Content sections to display, in this order (overrides the configuration)')
+            [CompletionResult]::new('--format', '--format', [CompletionResultType]::ParameterName, 'Output format')
             [CompletionResult]::new('-s', '-s', [CompletionResultType]::ParameterName, 'Speak aloud')
             [CompletionResult]::new('--speak', '--speak', [CompletionResultType]::ParameterName, 'Speak aloud')
             [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Mute (overloads speak)')
