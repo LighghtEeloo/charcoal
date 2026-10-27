@@ -1,0 +1,194 @@
+# Keep the AUR package in sync with cargo-dist releases.
+#
+# Mirrors the release flow used by blooming-blockery: after the `Release`
+# workflow succeeds for a version tag, this workflow updates the AUR repository
+# itself (pkgver/pkgrel/source), regenerates the checksums and .SRCINFO with the
+# real Arch tooling inside an `archlinux` container, and pushes the result.
+#
+# The AUR PKGBUILD remains the source of truth for the package recipe, but this
+# workflow owns the version-dependent fields. In particular it always writes a
+# source line driven by $pkgver/$url with a version-qualified local filename, so
+# neither a new release nor makepkg's source cache requires manual patching.
+#
+# Required repository secret:
+#   AUR_SSH_PRIVATE_KEY  private key registered with the AUR account
+# Optional repository secret:
+#   AUR_EMAIL            commit email (defaults to the maintainer address)
+
+name: Release to AUR
+
+on:
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to sync to the AUR package (e.g. v0.3.3)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aur-release
+  cancel-in-progress: false
+
+jobs:
+  aur:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    env:
+      AUR_PKGNAME: charcoal-dict-bin
+      # Version-driven, cache-safe source line written into the AUR PKGBUILD.
+      # The GitHub release asset name has no version, so a version-qualified
+      # local filename stops makepkg from reusing a previous release's tarball.
+      AUR_SOURCE_LINE: 'source=("charcoal-dict-$pkgver-x86_64-unknown-linux-gnu.tar.xz::$url/releases/download/v$pkgver/charcoal-dict-x86_64-unknown-linux-gnu.tar.xz")'
+    steps:
+      - name: Checkout tagged commit (after Release workflow)
+        if: github.event_name == 'workflow_run'
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Checkout release tag (manual dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/checkout@v6
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          fetch-depth: 0
+
+      - name: Determine release tag and version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            TAG="${{ inputs.tag }}"
+          else
+            git fetch --tags --force
+            TAG="$(git tag --points-at HEAD --list 'v[0-9]*' | sort -V | tail -n 1)"
+            if [[ -z "${TAG}" ]]; then
+              echo "No release tag points at HEAD ($(git rev-parse HEAD)); nothing to publish."
+              exit 1
+            fi
+          fi
+          if [[ ! "${TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            # cargo-dist also releases prereleases; mirror its brew/npm jobs and
+            # only publish stable versions to the AUR.
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping ${TAG}: only stable vMAJOR.MINOR.PATCH tags are published to AUR."
+            exit 0
+          fi
+          echo "publish=true" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "pkgver=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up SSH for AUR
+        if: steps.version.outputs.publish == 'true'
+        shell: bash
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${AUR_SSH_PRIVATE_KEY}" ]]; then
+            echo "Missing repository secret AUR_SSH_PRIVATE_KEY."
+            exit 1
+          fi
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -t rsa,ecdsa,ed25519 -H aur.archlinux.org >> ~/.ssh/known_hosts 2>/dev/null
+          chmod 644 ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<'EOF'
+          Host aur.archlinux.org
+            User aur
+            HostName aur.archlinux.org
+            IdentityFile ~/.ssh/id_ed25519
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+            UserKnownHostsFile ~/.ssh/known_hosts
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Clone AUR repository
+        if: steps.version.outputs.publish == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone "ssh://aur@aur.archlinux.org/${AUR_PKGNAME}.git" aur
+
+      - name: Update version fields in the AUR PKGBUILD
+        if: steps.version.outputs.publish == 'true'
+        shell: bash
+        env:
+          PKGVER: ${{ steps.version.outputs.pkgver }}
+        run: |
+          set -euo pipefail
+          cd aur
+
+          CURRENT_VER="$(sed -n 's/^pkgver=//p' PKGBUILD)"
+          if [[ "${CURRENT_VER}" == "${PKGVER}" ]]; then
+            echo "AUR already at ${PKGVER}; keeping pkgrel as is."
+          else
+            sed -i -E "s/^pkgver=.*/pkgver=${PKGVER}/" PKGBUILD
+            sed -i -E "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
+          fi
+
+          python3 - <<'PY'
+          import os
+          import pathlib
+
+          pkgbuild = pathlib.Path("PKGBUILD")
+          lines = pkgbuild.read_text().splitlines()
+          for index, line in enumerate(lines):
+              if line.startswith("source="):
+                  lines[index] = os.environ["AUR_SOURCE_LINE"]
+                  break
+          else:
+              raise SystemExit("No source= line found in the AUR PKGBUILD")
+          pkgbuild.write_text("\n".join(lines) + "\n")
+          PY
+
+          grep -E '^pkgver=|^pkgrel=|^source=' PKGBUILD
+
+      - name: Regenerate checksums and .SRCINFO (Arch container)
+        if: steps.version.outputs.publish == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > aur/.SRCINFO
+          docker run --rm -v "${GITHUB_WORKSPACE}/aur:/pkg" archlinux:latest bash -c '
+            set -euo pipefail
+            pacman -Sy --noconfirm --needed base-devel pacman-contrib >/dev/null
+            HOST_UID="$(stat -c %u /pkg)"
+            HOST_GID="$(stat -c %g /pkg)"
+            getent group "$HOST_GID" >/dev/null || groupadd -g "$HOST_GID" hostgrp
+            id -u hostuser >/dev/null 2>&1 || useradd -m -u "$HOST_UID" -g "$HOST_GID" hostuser
+            su - hostuser -c "cd /pkg && updpkgsums && makepkg --printsrcinfo > .SRCINFO"
+          '
+
+      - name: Commit and push to AUR
+        if: steps.version.outputs.publish == 'true'
+        shell: bash
+        env:
+          GIT_AUTHOR_NAME: LighghtEeloo
+          GIT_AUTHOR_EMAIL: ${{ secrets.AUR_EMAIL || 'litiaeeloo@gmail.com' }}
+          GIT_COMMITTER_NAME: LighghtEeloo
+          GIT_COMMITTER_EMAIL: ${{ secrets.AUR_EMAIL || 'litiaeeloo@gmail.com' }}
+        run: |
+          set -euo pipefail
+          cd aur
+          git diff --stat
+          if git diff --quiet; then
+            echo "AUR package is already up to date."
+            exit 0
+          fi
+          git add PKGBUILD .SRCINFO
+          git commit -m "Update to ${{ steps.version.outputs.tag }}"
+          git push
